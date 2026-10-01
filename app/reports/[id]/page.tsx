@@ -9,6 +9,7 @@ import { getClientBySlug, requireUser } from '@/lib/workspace'
 import { getReport, getReportSends } from '@/lib/reports'
 import { REPORT_STATUS_LABEL } from '@/lib/report-status'
 import { isEmailConfigured } from '@/lib/email'
+import { DEMO_RECIPIENT_EMAIL, isDemoEmail } from '@/lib/demo-account'
 
 export const metadata: Metadata = { title: 'Report' }
 
@@ -33,7 +34,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
             status: report.status,
             coverNote: report.coverNote ?? '',
             letter: report.letter ?? '',
-            recipientEmail: report.recipientEmail ?? '',
+            recipientEmail: report.recipientEmail || (isDemoEmail(user.email) ? DEMO_RECIPIENT_EMAIL : ''),
             submittedAt: report.submittedAt?.toISOString() ?? null,
             approvedAt: report.approvedAt?.toISOString() ?? null,
             sentAt: report.sentAt?.toISOString() ?? null,

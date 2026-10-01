@@ -13,6 +13,7 @@ import { getReport, reportFileName } from '@/lib/reports'
 import { isEditable } from '@/lib/report-status'
 import { renderReportPdf } from '@/lib/report-pdf'
 import { sendReportEmail } from '@/lib/email'
+import { DEMO_RECIPIENT_EMAIL, isDemoEmail } from '@/lib/demo-account'
 
 type Result = { ok: true; message?: string } | { ok: false; error: string }
 
@@ -47,6 +48,7 @@ export async function createReport(clientSlug: string) {
       userId: user.id,
       clientSlug: client.id,
       title: `Annual Review Report — ${client.name} (${client.nextReview})`,
+      recipientEmail: isDemoEmail(user.email) ? DEMO_RECIPIENT_EMAIL : null,
       letter: review?.letterDraft ?? null,
       coverNote: `Dear ${client.firstName},\n\nPlease find enclosed your annual review report ahead of our meeting. It summarises your portfolio, asset allocation and the changes since your last review.`,
     })
