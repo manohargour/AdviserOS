@@ -4,28 +4,36 @@ import { Sparkles } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/components/shell/page-header'
 import { AskAdviserButton } from '@/components/adviser/ask-adviser-button'
 import { cn } from '@/lib/utils'
-import { reviewsDue } from '@/lib/data'
+import { getReviews, requireUser } from '@/lib/workspace'
 
 export const metadata: Metadata = { title: 'Reviews' }
 
 const statusTone: Record<string, string> = {
+  Approved: 'text-positive',
   'Draft ready': 'text-positive',
   'In progress': 'text-foreground',
   'Awaiting data': 'text-warning',
   'Not started': 'text-muted-foreground',
 }
 
-export default function ReviewsPage() {
-  const ready = reviewsDue.filter((r) => r.status === 'Draft ready').length
+export default async function ReviewsPage() {
+  const user = await requireUser()
+  const reviews = await getReviews(user.id)
+  const ready = reviews.filter((r) => r.status === 'Draft ready').length
+  const approved = reviews.filter((r) => r.status === 'Approved').length
+
   return (
     <PageContainer>
-      <PageHeader title="Reviews" description={`${reviewsDue.length} reviews due in October · ${ready} drafts ready for approval`}>
+      <PageHeader
+        title="Reviews"
+        description={`${reviews.length} reviews due in October · ${ready} drafts ready · ${approved} approved`}
+      >
         <AskAdviserButton prompt="Prepare all reviews due this week" variant="default" size="default">
           <Sparkles aria-hidden /> Prepare this week&apos;s reviews
         </AskAdviserButton>
       </PageHeader>
       <ul className="divide-y rounded-xl border bg-card">
-        {reviewsDue.map((r) => {
+        {reviews.map((r) => {
           const body = (
             <>
               <div className="min-w-0 flex-1">
@@ -42,9 +50,9 @@ export default function ReviewsPage() {
             </>
           )
           return (
-            <li key={r.name}>
-              {r.clientId ? (
-                <Link href={`/reviews/${r.clientId}`} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/40">
+            <li key={r.id}>
+              {r.clientSlug ? (
+                <Link href={`/reviews/${r.clientSlug}`} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/40">
                   {body}
                 </Link>
               ) : (

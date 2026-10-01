@@ -1,18 +1,44 @@
 'use client'
 
-import { useState } from 'react'
-import { ArrowRight, Check, CircleCheck, ShieldCheck } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { ArrowRight, Check, CircleCheck, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAdviser, useReviewProgress } from '@/components/adviser/adviser-provider'
 import { AllocationBar } from '@/components/clients/allocation-bar'
+import { approveReview } from '@/app/actions/workspace'
 import { cn } from '@/lib/utils'
-import { allocation, gbp, getClient } from '@/lib/data'
+import { allocation, gbp, type Client } from '@/lib/data'
 
-export function ReviewWorkspace({ clientId }: { clientId: string }) {
-  const client = getClient(clientId)!
+export function ReviewWorkspace({
+  client,
+  initialApproved,
+  approvedAt,
+}: {
+  client: Client
+  initialApproved: boolean
+  approvedAt: string | null
+}) {
   const { confirmed, setConfirmed, send, isWorking } = useAdviser()
-  const { readiness, remaining } = useReviewProgress(client)
-  const [approved, setApproved] = useState(false)
+  const progress = useReviewProgress(client)
+  const [approved, setApproved] = useState(initialApproved)
+  const [saving, startSaving] = useTransition()
+  const [saveError, setSaveError] = useState(false)
+  const readiness = approved ? 100 : progress.readiness
+  const remaining = approved ? 0 : progress.remaining
+
+  function handleApprove() {
+    setSaveError(false)
+    const items = client.outstanding.filter((item) => confirmed[item.id]).map((item) => item.id)
+    startSaving(async () => {
+      try {
+        await approveReview(client.id, items)
+        setApproved(true)
+      } catch (error) {
+        console.error('[review] approve failed', error)
+        setSaveError(true)
+      }
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -32,15 +58,33 @@ export function ReviewWorkspace({ clientId }: { clientId: string }) {
             </p>
           </div>
         </div>
-        <Button
-          size="lg"
-          disabled={remaining > 0 || approved}
-          onClick={() => setApproved(true)}
-          className={cn(approved && 'bg-positive disabled:opacity-100')}
-        >
-          {approved ? <CircleCheck aria-hidden /> : <ShieldCheck aria-hidden />}
-          {approved ? 'Review approved' : 'Approve review'}
-        </Button>
+        <div className="flex flex-col items-start gap-1.5 md:items-end">
+          <Button
+            size="lg"
+            disabled={remaining > 0 || approved || saving}
+            onClick={handleApprove}
+            className={cn(approved && 'bg-positive disabled:opacity-100')}
+          >
+            {saving ? (
+              <Loader2 aria-hidden className="animate-spin" />
+            ) : approved ? (
+              <CircleCheck aria-hidden />
+            ) : (
+              <ShieldCheck aria-hidden />
+            )}
+            {approved ? 'Review approved' : 'Approve review'}
+          </Button>
+          {approved && approvedAt && (
+            <p className="text-xs text-muted-foreground">
+              Approved {new Date(approvedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </p>
+          )}
+          {saveError && (
+            <p role="alert" className="text-xs text-destructive">
+              Couldn&apos;t save the approval. Try again.
+            </p>
+          )}
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-5">

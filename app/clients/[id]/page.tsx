@@ -6,20 +6,15 @@ import { PageContainer } from '@/components/shell/page-header'
 import { StatusBadge } from '@/components/clients/status-badge'
 import { ClientTabs } from '@/components/clients/client-tabs'
 import { AskAdviserButton } from '@/components/adviser/ask-adviser-button'
-import { clients, gbp, getClient } from '@/lib/data'
+import { gbp } from '@/lib/data'
+import { getClientBySlug, requireUser } from '@/lib/workspace'
 
-export function generateStaticParams() {
-  return clients.map((c) => ({ id: c.id }))
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params
-  return { title: getClient(id)?.name ?? 'Client' }
-}
+export const metadata: Metadata = { title: 'Client' }
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const client = getClient(id)
+  const user = await requireUser()
+  const client = await getClientBySlug(user.id, id)
   if (!client) notFound()
 
   return (

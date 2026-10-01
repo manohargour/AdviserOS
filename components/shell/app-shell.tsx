@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Menu, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AdviserPanel } from '@/components/adviser/adviser-panel'
@@ -11,6 +12,9 @@ import { CommandBar } from './command-bar'
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [navOpen, setNavOpen] = useState(false)
   const { setPanelOpen } = useAdviser()
+  const pathname = usePathname()
+
+  if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) return <>{children}</>
 
   return (
     <div className="flex h-dvh overflow-hidden">

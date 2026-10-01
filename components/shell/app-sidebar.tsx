@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
+  LogOut,
   Bell,
   CalendarCheck,
   Database,
@@ -17,6 +18,48 @@ import {
 import { LogoMark } from '@/components/brand/logo-mark'
 import { cn } from '@/lib/utils'
 import { ADVISER } from '@/lib/data'
+import { authClient } from '@/lib/auth-client'
+
+function initialsOf(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join('')
+}
+
+function UserFooter() {
+  const router = useRouter()
+  const { data: session } = authClient.useSession()
+  const name = session?.user.name || session?.user.email || ''
+
+  async function handleSignOut() {
+    await authClient.signOut()
+    router.push('/sign-in')
+    router.refresh()
+  }
+
+  return (
+    <div className="flex items-center gap-2.5 border-t border-sidebar-border px-4 py-3">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">
+        {name ? initialsOf(name) : ''}
+      </span>
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="truncate text-sm text-sidebar-accent-foreground">{name || '\u00a0'}</p>
+        <p className="truncate text-[11px] text-sidebar-foreground/70">{ADVISER.firm}</p>
+      </div>
+      <button
+        type="button"
+        onClick={handleSignOut}
+        aria-label="Sign out"
+        className="rounded-md p-1.5 text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      >
+        <LogOut aria-hidden className="size-4" />
+      </button>
+    </div>
+  )
+}
 
 const primary: { href: string; label: string; icon: LucideIcon; count?: number }[] = [
   { href: '/', label: 'Home', icon: House },
@@ -105,15 +148,7 @@ export function AppSidebar({ open, onNavigate }: { open: boolean; onNavigate: ()
             <NavLink key={item.href} {...item} onNavigate={onNavigate} />
           ))}
         </nav>
-        <div className="flex items-center gap-2.5 border-t border-sidebar-border px-4 py-3">
-          <span className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">
-            CH
-          </span>
-          <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm text-sidebar-accent-foreground">{ADVISER.name}</p>
-            <p className="truncate text-[11px] text-sidebar-foreground/70">{ADVISER.firm}</p>
-          </div>
-        </div>
+        <UserFooter />
       </aside>
     </>
   )

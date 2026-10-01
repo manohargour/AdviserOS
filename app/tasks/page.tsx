@@ -1,35 +1,19 @@
 import type { Metadata } from 'next'
 import { PageContainer, PageHeader } from '@/components/shell/page-header'
-import { cn } from '@/lib/utils'
-import { tasks } from '@/lib/data'
+import { TaskList } from '@/components/tasks/task-list'
+import { getTasks, requireUser } from '@/lib/workspace'
 
 export const metadata: Metadata = { title: 'Tasks' }
 
-export default function TasksPage() {
+export default async function TasksPage() {
+  const user = await requireUser()
+  const tasks = await getTasks(user.id)
+  const open = tasks.filter((t) => !t.done).length
+
   return (
     <PageContainer>
-      <PageHeader title="Tasks" description="Created from reviews, alerts, meeting notes and compliance checks" />
-      <ul className="divide-y rounded-xl border bg-card">
-        {tasks.map((t) => (
-          <li key={t.id} className="flex items-center gap-3 px-4 py-3">
-            <input
-              type="checkbox"
-              defaultChecked={t.done}
-              aria-label={t.title}
-              className="size-4 shrink-0 accent-primary"
-            />
-            <div className="min-w-0 flex-1">
-              <p className={cn('text-sm font-medium', t.done && 'text-muted-foreground line-through')}>{t.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {t.client} · from {t.source}
-              </p>
-            </div>
-            <span className={cn('text-xs', t.due === 'Today' ? 'font-medium text-warning' : 'text-muted-foreground')}>
-              {t.due}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <PageHeader title="Tasks" description={`${open} open · created from reviews, alerts, meeting notes and compliance checks`} />
+      <TaskList tasks={tasks.map(({ id, title, client, due, source, done }) => ({ id, title, client, due, source, done }))} />
     </PageContainer>
   )
 }
