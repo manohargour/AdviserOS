@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { ArrowRight, FileText } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AllocationBar } from './allocation-bar'
-import { allocation, equityPct, gbp, type Client } from '@/lib/data'
+import { ADVISER, allocation, equityPct, gbp, type Client } from '@/lib/data'
+import { ActionsPanel, CostsPanel, GoalsPanel, PerformancePanel, RiskPanel, TaxPanel } from '@/components/planning/panels'
+import { planFor } from '@/lib/planning'
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
@@ -132,28 +134,47 @@ function Portfolio({ client }: { client: Client }) {
           </table>
         </div>
       </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="Performance against benchmark">
+          <PerformancePanel plan={planFor(client)} />
+        </Card>
+        <Card title="Costs and charges">
+          <CostsPanel plan={planFor(client)} />
+        </Card>
+      </div>
     </div>
   )
 }
 
 function Goals({ client }: { client: Client }) {
   return (
-    <ul className="grid gap-4 md:grid-cols-2">
-      {client.goals.map((g) => (
-        <li key={g.title} className="rounded-xl border bg-card p-4">
-          <p className="font-medium">{g.title}</p>
-          <p className="text-sm text-muted-foreground">
-            {g.target} · {g.horizon}
-          </p>
-          <div className="mt-3 flex items-center gap-3">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden>
-              <div className="h-full rounded-full bg-primary" style={{ width: `${g.progress}%` }} />
-            </div>
-            <span className="text-xs tabular-nums text-muted-foreground">{g.progress}% on track</span>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <Card title="Goals and projections">
+      <GoalsPanel plan={planFor(client)} />
+    </Card>
+  )
+}
+
+function Risk({ client }: { client: Client }) {
+  return (
+    <Card title="Risk and suitability">
+      <RiskPanel client={client} plan={planFor(client)} />
+    </Card>
+  )
+}
+
+function Tax({ client }: { client: Client }) {
+  return (
+    <Card title="Tax wrappers and allowances">
+      <TaxPanel plan={planFor(client)} />
+    </Card>
+  )
+}
+
+function Actions({ client }: { client: Client }) {
+  return (
+    <Card title="Recommendations and actions">
+      <ActionsPanel plan={planFor(client)} adviserName={ADVISER.name} />
+    </Card>
   )
 }
 
@@ -249,7 +270,10 @@ function Activity({ client, events }: { client: Client; events: ClientEvent[] })
 const tabs = [
   { value: 'overview', label: 'Overview', Panel: Overview },
   { value: 'portfolio', label: 'Portfolio', Panel: Portfolio },
+  { value: 'risk', label: 'Risk', Panel: Risk },
   { value: 'goals', label: 'Goals', Panel: Goals },
+  { value: 'tax', label: 'Tax', Panel: Tax },
+  { value: 'actions', label: 'Actions', Panel: Actions },
   { value: 'reviews', label: 'Reviews', Panel: Reviews },
   { value: 'documents', label: 'Documents', Panel: Documents },
 ]

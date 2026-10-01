@@ -2,6 +2,8 @@ import { ADVISER, allocation, equityPct, gbp, type Client } from '@/lib/data'
 import { LogoMark } from '@/components/brand/logo-mark'
 import { AllocationDonut, ExposureChart, ValuationChart } from '@/components/report/report-charts'
 import { ASSET_COLORS } from '@/components/report/asset-colors'
+import { ActionsPanel, CostsPanel, GoalsPanel, PerformancePanel, RiskPanel, TaxPanel } from '@/components/planning/panels'
+import { planFor } from '@/lib/planning'
 import { cn } from '@/lib/utils'
 
 function Section({ n, title, children, className }: { n: number; title: string; children: React.ReactNode; className?: string }) {
@@ -41,6 +43,7 @@ export function ReviewReport({
   letter: string | null
 }) {
   const rows = allocation(client)
+  const plan = planFor(client)
   const change = client.portfolioValue - client.previousValue
   const changePct = (change / client.previousValue) * 100
   const equityNow = equityPct(client)
@@ -129,7 +132,8 @@ export function ReviewReport({
               ? `Your attitude to risk was reassessed on ${client.risk.assessedOn} and has changed from ${client.risk.previousScore} to ${client.risk.score}.`
               : `Your attitude to risk was reassessed on ${client.risk.assessedOn} and remains ${client.risk.label} (${client.risk.score} of 10).`}{' '}
             {client.outstanding.length > 0 &&
-              `${client.outstanding.length} item${client.outstanding.length === 1 ? '' : 's'} remain open and are listed in section 7.`}
+              `${client.outstanding.length} item${client.outstanding.length === 1 ? '' : 's'} remain open and are listed in section 10.`}{' '}
+            {plan.risk.statement}
           </p>
         </Section>
 
@@ -169,7 +173,11 @@ export function ReviewReport({
           </p>
         </Section>
 
-        <Section n={3} title="Asset allocation">
+        <Section n={3} title="Performance against benchmark">
+          <PerformancePanel plan={plan} />
+        </Section>
+
+        <Section n={4} title="Asset allocation">
           <div className="grid items-center gap-8 md:grid-cols-5">
             <div className="md:col-span-2">
               <AllocationDonut rows={rows} total={gbp(client.portfolioValue)} />
@@ -216,7 +224,7 @@ export function ReviewReport({
           />
         </Section>
 
-        <Section n={4} title="Holdings">
+        <Section n={5} title="Holdings">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <caption className="sr-only">Holdings at {client.nextReview}</caption>
@@ -263,75 +271,23 @@ export function ReviewReport({
           </div>
         </Section>
 
-        <Section n={5} title="Attitude to risk">
-          <div className="grid gap-8 md:grid-cols-5">
-            <div className="md:col-span-3">
-              <div className="flex gap-1" role="img" aria-label={`Risk score ${client.risk.score} of 10${riskMoved ? `, previously ${client.risk.previousScore}` : ''}`}>
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                  <div key={n} className="flex flex-1 flex-col items-center gap-1.5">
-                    <div
-                      className={cn(
-                        'h-8 w-full rounded-sm print:[print-color-adjust:exact]',
-                        n === client.risk.score ? 'bg-primary' : n === client.risk.previousScore ? 'bg-chart-4' : 'bg-muted',
-                      )}
-                    />
-                    <span className={cn('text-xs tabular-nums', n === client.risk.score ? 'font-semibold' : 'text-muted-foreground')}>{n}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-1 flex justify-between text-[11px] uppercase tracking-wider text-muted-foreground">
-                <span>Lower risk</span>
-                <span>Higher risk</span>
-              </div>
-            </div>
-            <dl className="grid grid-cols-2 gap-4 text-sm md:col-span-2">
-              <div>
-                <dt className="text-xs text-muted-foreground">Current profile</dt>
-                <dd className="font-medium">
-                  {client.risk.label} ({client.risk.score})
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Previous score</dt>
-                <dd className="font-medium">{client.risk.previousScore}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Assessed</dt>
-                <dd className="font-medium">{client.risk.assessedOn}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Method</dt>
-                <dd className="font-medium">{client.risk.tool}</dd>
-              </div>
-            </dl>
-          </div>
+        <Section n={6} title="Risk and suitability">
+          <RiskPanel client={client} plan={plan} />
         </Section>
 
-        <Section n={6} title="Objectives and progress">
-          <ul className="space-y-4">
-            {client.goals.map((g) => (
-              <li key={g.title} className="grid items-center gap-2 md:grid-cols-[1fr_auto]">
-                <div>
-                  <p className="text-sm font-medium">{g.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Target {g.target} · {g.horizon}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-2 w-48 overflow-hidden rounded-full bg-muted" aria-hidden>
-                    <div
-                      className={cn('h-full rounded-full print:[print-color-adjust:exact]', g.progress >= 100 ? 'bg-positive' : 'bg-brass')}
-                      style={{ width: `${Math.min(g.progress, 100)}%` }}
-                    />
-                  </div>
-                  <span className="w-10 text-right text-sm tabular-nums">{g.progress}%</span>
-                </div>
-              </li>
-            ))}
-          </ul>
+        <Section n={7} title="Goals and projections">
+          <GoalsPanel plan={plan} />
         </Section>
 
-        <Section n={7} title="Changes and outstanding items">
+        <Section n={8} title="Tax wrappers and allowances">
+          <TaxPanel plan={plan} />
+        </Section>
+
+        <Section n={9} title="Costs and charges">
+          <CostsPanel plan={plan} />
+        </Section>
+
+        <Section n={10} title="Changes and outstanding items">
           <table className="w-full text-sm">
             <caption className="sr-only">Changes since last review</caption>
             <thead>
@@ -370,17 +326,12 @@ export function ReviewReport({
           )}
         </Section>
 
-        <Section n={8} title="Adviser recommendation">
-          <div className="rounded-lg border-2 border-dashed border-brass/50 bg-accent/30 p-5 text-sm">
-            <p className="font-medium">To be completed by {adviserName}.</p>
-            <p className="mt-1 text-muted-foreground">
-              Recommendations are written and signed by your adviser following the review meeting. AdviserOS does not draft advice.
-            </p>
-          </div>
+        <Section n={11} title="Recommendations and actions">
+          <ActionsPanel plan={plan} adviserName={adviserName} />
         </Section>
 
         {letter && (
-          <Section n={9} title="Covering letter" className="print:break-before-page">
+          <Section n={12} title="Covering letter" className="print:break-before-page">
             <div className="whitespace-pre-line font-serif text-[15px] leading-relaxed">{letter}</div>
           </Section>
         )}
