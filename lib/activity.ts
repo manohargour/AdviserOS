@@ -14,6 +14,13 @@ export type ActivityAction =
   | 'letter.drafted'
   | 'letter.edited'
   | 'workspace.reset'
+  | 'report.created'
+  | 'report.edited'
+  | 'report.submit'
+  | 'report.approve'
+  | 'report.reopen'
+  | 'report.sent'
+  | 'report.deleted'
 
 export type ActivityEntry = typeof activityLog.$inferSelect
 

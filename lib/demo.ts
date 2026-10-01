@@ -2,7 +2,7 @@ import 'server-only'
 
 import { eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { activityLog, alerts, chatThreads, clients, reviews, tasks, user } from '@/lib/db/schema'
+import { activityLog, alerts, chatThreads, clients, reportSends, reports, reviews, tasks, user } from '@/lib/db/schema'
 import { DEMO_EMAIL } from '@/lib/demo-account'
 import { seedWorkspace } from '@/lib/workspace'
 
@@ -18,6 +18,8 @@ export async function resetDemoWorkspace(userId: string) {
   await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`)
 
+    await tx.delete(reportSends).where(eq(reportSends.userId, userId))
+    await tx.delete(reports).where(eq(reports.userId, userId))
     await tx.delete(chatThreads).where(eq(chatThreads.userId, userId))
     await tx.delete(activityLog).where(eq(activityLog.userId, userId))
     await tx.delete(alerts).where(eq(alerts.userId, userId))

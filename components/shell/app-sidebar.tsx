@@ -144,6 +144,7 @@ const primary: { href: string; label: string; icon: LucideIcon; count?: number }
   { href: '/', label: 'Home', icon: House },
   { href: '/clients', label: 'Clients', icon: Users },
   { href: '/reviews', label: 'Reviews', icon: CalendarCheck, count: 15 },
+  { href: '/reports', label: 'Reports', icon: FileText },
   { href: '/tasks', label: 'Tasks', icon: ListChecks, count: 5 },
   { href: '/alerts', label: 'Alerts', icon: Bell, count: 6 },
   { href: '/activity', label: 'Activity', icon: History },

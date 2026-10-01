@@ -123,3 +123,31 @@ export const chatThreads = pgTable('chat_threads', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
+
+export const reports = pgTable('reports', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  clientSlug: text('clientSlug').notNull(),
+  title: text('title').notNull(),
+  status: text('status').$type<'draft' | 'in_review' | 'approved' | 'sent'>().notNull().default('draft'),
+  coverNote: text('coverNote'),
+  letter: text('letter'),
+  recipientEmail: text('recipientEmail'),
+  submittedAt: timestamp('submittedAt'),
+  approvedAt: timestamp('approvedAt'),
+  sentAt: timestamp('sentAt'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const reportSends = pgTable('report_sends', {
+  id: serial('id').primaryKey(),
+  reportId: integer('reportId').notNull(),
+  userId: text('userId').notNull(),
+  toEmail: text('toEmail').notNull(),
+  subject: text('subject').notNull(),
+  status: text('status').$type<'sent' | 'failed'>().notNull(),
+  providerId: text('providerId'),
+  error: text('error'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})

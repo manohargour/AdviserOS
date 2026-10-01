@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Check, CircleCheck, FileText, Loader2, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Check, CircleCheck, FilePlus, FileText, Loader2, ShieldCheck } from 'lucide-react'
+import { createReport } from '@/app/actions/reports'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { useAdviser, useReviewProgress } from '@/components/adviser/adviser-provider'
 import { AllocationBar } from '@/components/clients/allocation-bar'
@@ -28,6 +29,7 @@ export function ReviewWorkspace({
   const progress = useReviewProgress(client)
   const [approved, setApproved] = useState(initialApproved)
   const [saving, startSaving] = useTransition()
+  const [creatingReport, startCreateReport] = useTransition()
   const [saveError, setSaveError] = useState(false)
   const readiness = approved ? 100 : progress.readiness
   const remaining = approved ? 0 : progress.remaining
@@ -69,6 +71,14 @@ export function ReviewWorkspace({
           <Link href={`/reviews/${client.id}/report`} className={buttonVariants({ size: 'lg', variant: 'outline' })}>
             <FileText aria-hidden /> View report
           </Link>
+          <Button
+            size="lg"
+            variant="outline"
+            disabled={creatingReport}
+            onClick={() => startCreateReport(() => createReport(client.id))}
+          >
+            {creatingReport ? <Loader2 aria-hidden className="animate-spin" /> : <FilePlus aria-hidden />} Save as report
+          </Button>
           <Button
             size="lg"
             disabled={remaining > 0 || approved || saving}
