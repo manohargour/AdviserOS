@@ -91,7 +91,7 @@ export function AppSidebar({ open, onNavigate }: { open: boolean; onNavigate: ()
         <div className="flex items-center gap-2.5 px-4 py-4">
           <LogoMark />
           <div className="leading-tight">
-            <p className="text-sm font-semibold text-sidebar-accent-foreground">Adviser Copilot</p>
+            <p className="text-sm font-semibold text-sidebar-accent-foreground">AdviserOS</p>
             <p className="text-[11px] text-sidebar-foreground/70">AI workspace for financial advisers</p>
           </div>
         </div>

@@ -53,7 +53,7 @@ export function CommandBar() {
       >
         <Sparkles aria-hidden className="size-4 shrink-0 text-brass" />
         <label htmlFor="command-bar" className="sr-only">
-          Ask Adviser Copilot or tell it what to do
+          Ask AdviserOS or tell it what to do
         </label>
         <input
           ref={inputRef}
@@ -85,7 +85,7 @@ export function CommandBar() {
               e.preventDefault()
             }
           }}
-          placeholder="Ask Adviser Copilot or tell it what to do…"
+          placeholder="Ask AdviserOS or tell it what to do…"
           className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
         <kbd className="hidden rounded border bg-muted px-1.5 py-0.5 font-sans text-[10px] text-muted-foreground sm:inline">

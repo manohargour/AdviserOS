@@ -10,11 +10,11 @@ const newsreader = Newsreader({ subsets: ['latin'], variable: '--font-newsreader
 
 export const metadata: Metadata = {
   title: {
-    default: 'Adviser Copilot — AI workspace for financial advisers',
-    template: '%s · Adviser Copilot',
+    default: 'AdviserOS — AI workspace for financial advisers',
+    template: '%s · AdviserOS',
   },
   description:
-    'Your AI copilot for client work. Bring client data, portfolios, risk information and documents together. Adviser Copilot prepares the work, surfaces what needs attention and leaves judgement with the adviser.',
+    'Your AI copilot for client work. Bring client data, portfolios, risk information and documents together. AdviserOS prepares the work, surfaces what needs attention and leaves judgement with the adviser.',
   generator: 'v0.app',
   icons: {
     icon: [

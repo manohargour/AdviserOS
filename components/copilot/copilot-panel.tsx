@@ -172,7 +172,7 @@ export function CopilotPanel() {
         )}
       />
       <aside
-        aria-label="Adviser Copilot"
+        aria-label="AdviserOS"
         className={cn(
           'fixed inset-y-0 right-0 z-50 flex w-full max-w-[400px] flex-col border-l bg-card transition-transform xl:static xl:z-auto xl:w-[380px] xl:max-w-none xl:translate-x-0',
           panelOpen ? 'translate-x-0' : 'translate-x-full',
@@ -182,7 +182,7 @@ export function CopilotPanel() {
           <div className="flex items-center gap-2.5">
             <LogoMark className="size-7 text-base" />
             <div>
-              <h2 className="text-sm font-semibold leading-tight">Adviser Copilot</h2>
+              <h2 className="text-sm font-semibold leading-tight">AdviserOS</h2>
               <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <span className="relative flex size-1.5">
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-positive opacity-60" />
@@ -269,7 +269,7 @@ export function CopilotPanel() {
             className="flex items-end gap-2 rounded-xl border bg-background p-1.5 focus-within:ring-2 focus-within:ring-ring/30"
           >
             <label htmlFor="copilot-input" className="sr-only">
-              Message Adviser Copilot
+              Message AdviserOS
             </label>
             <textarea
               id="copilot-input"

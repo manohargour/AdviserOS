@@ -192,7 +192,7 @@ export const clients: Client[] = [
       { name: 'Annual Review Letter 2025', type: 'Review letter', date: '20 Oct 2025', source: 'Xplan' },
     ],
     activity: [
-      { date: 'Today, 08:12', text: 'Adviser Copilot detected 4 changes since the last review' },
+      { date: 'Today, 08:12', text: 'AdviserOS detected 4 changes since the last review' },
       { date: '30 Sep 2026', text: 'Portfolio export received from Transact' },
       { date: '14 Sep 2026', text: 'Risk questionnaire completed — Moderate 5/10' },
       { date: '3 Mar 2026', text: 'Pension drawdown started' },

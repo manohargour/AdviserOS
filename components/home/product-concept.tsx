@@ -39,7 +39,7 @@ export function ProductConcept() {
           Your AI copilot for client work.
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-pretty">
-          Bring client data, portfolios, risk information and documents together. Adviser Copilot prepares the work,
+          Bring client data, portfolios, risk information and documents together. AdviserOS prepares the work,
           surfaces what needs attention and leaves judgement with the adviser.
         </p>
         <p className="mt-3 text-sm font-medium text-sidebar-primary">Less administration. More time with clients.</p>
@@ -50,7 +50,7 @@ export function ProductConcept() {
         <Connector />
         <div className="flex flex-col items-center gap-2 rounded-xl border border-sidebar-primary/40 bg-sidebar-accent px-6 py-6 text-center lg:w-56">
           <LogoMark className="size-10 text-xl" />
-          <p className="text-sm font-semibold text-sidebar-accent-foreground">Adviser Copilot</p>
+          <p className="text-sm font-semibold text-sidebar-accent-foreground">AdviserOS</p>
           <p className="text-xs">Intelligence and workflow layer</p>
         </div>
         <Connector />
@@ -58,7 +58,7 @@ export function ProductConcept() {
       </div>
 
       <p className="mt-8 border-t border-sidebar-border pt-4 text-sm text-pretty">
-        Existing systems remain systems of record. Adviser Copilot becomes the intelligence and workflow layer above
+        Existing systems remain systems of record. AdviserOS becomes the intelligence and workflow layer above
         them.
       </p>
     </section>

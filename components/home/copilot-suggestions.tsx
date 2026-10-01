@@ -40,7 +40,7 @@ export function CopilotSuggestions() {
     <section aria-labelledby="suggests">
       <h2 id="suggests" className="flex items-center gap-2 text-sm font-semibold">
         <Sparkles aria-hidden className="size-4 text-brass" />
-        Adviser Copilot suggests
+        AdviserOS suggests
       </h2>
       <ul className="mt-3 grid gap-3 sm:grid-cols-3">
         {suggestions.map((s) => (
