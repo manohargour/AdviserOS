@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -114,6 +114,48 @@ export async function transitionReport(id: number, step: keyof typeof TRANSITION
   await logActivity(user.id, { action: `report.${step}`, summary: `${t.verb}: "${report.title}"`, clientSlug: report.clientSlug })
   refresh(id)
   return { ok: true }
+}
+
+export async function emailReviewReport(
+  clientSlug: string,
+  input: { to: string; subject: string; message: string },
+): Promise<Result> {
+  const user = await getSessionUser()
+  const client = typeof clientSlug === 'string' ? await getClientBySlug(user.id, clientSlug) : null
+  if (!client) return { ok: false, error: 'Client not found' }
+  const review = await getReviewForClient(user.id, client.id)
+  if (review?.status !== 'Approved') return { ok: false, error: 'Approve the review before emailing the report.' }
+
+  const [existing] = await db
+    .select({ id: reports.id })
+    .from(reports)
+    .where(and(eq(reports.userId, user.id), eq(reports.clientSlug, client.id), inArray(reports.status, ['approved', 'sent'])))
+    .orderBy(desc(reports.updatedAt))
+    .limit(1)
+
+  let reportId = existing?.id
+  if (!reportId) {
+    const now = new Date()
+    const [row] = await db
+      .insert(reports)
+      .values({
+        userId: user.id,
+        clientSlug: client.id,
+        title: `Annual Review Report — ${client.name} (${client.nextReview})`,
+        status: 'approved',
+        submittedAt: now,
+        approvedAt: review.approvedAt ?? now,
+        letter: review.letterDraft ?? null,
+        coverNote: clean(input.message, 4000),
+      })
+      .returning({ id: reports.id })
+    reportId = row.id
+    await logActivity(user.id, { action: 'report.created', summary: `Created approved report for ${client.name} from review`, clientSlug: client.id })
+  }
+
+  const result = await sendReport(reportId, input)
+  revalidatePath(`/reviews/${client.id}/report`)
+  return result
 }
 
 export async function sendReport(id: number, input: { to: string; subject: string; message: string }): Promise<Result> {

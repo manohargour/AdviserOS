@@ -92,11 +92,20 @@ export async function approveReview(clientSlug: string, confirmedItems: string[]
     ? confirmedItems.filter((i): i is string => typeof i === 'string' && i.length <= 64).slice(0, 50)
     : []
 
-  const [review] = await db
+  const approval = { status: 'Approved', readiness: 100, confirmedItems: items, approvedAt: new Date() }
+  let [review] = await db
     .update(reviews)
-    .set({ status: 'Approved', readiness: 100, confirmedItems: items, approvedAt: new Date() })
+    .set(approval)
     .where(and(eq(reviews.userId, userId), eq(reviews.clientSlug, clientSlug)))
     .returning({ name: reviews.name })
+  if (!review) {
+    const client = await getClientBySlug(userId, clientSlug)
+    if (!client) throw new Error('Client not found')
+    ;[review] = await db
+      .insert(reviews)
+      .values({ userId, clientSlug, name: client.name, due: client.nextReview, ...approval })
+      .returning({ name: reviews.name })
+  }
   await db
     .update(clients)
     .set({ status: 'Up to Date', updatedAt: new Date() })
@@ -112,6 +121,7 @@ export async function approveReview(clientSlug: string, confirmedItems: string[]
 
   revalidatePath('/reviews')
   revalidatePath(`/reviews/${clientSlug}`)
+  revalidatePath(`/reviews/${clientSlug}/report`)
   revalidatePath('/clients')
   revalidatePath(`/clients/${clientSlug}`)
   revalidatePath('/activity')

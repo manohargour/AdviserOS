@@ -5,6 +5,8 @@ import { ChevronLeft } from 'lucide-react'
 import { PageContainer } from '@/components/shell/page-header'
 import { ReviewReport } from '@/components/report/review-report'
 import { PrintButton } from '@/components/report/print-button'
+import { EmailReportButton } from '@/components/report/email-report-button'
+import { DEMO_RECIPIENT_EMAIL, isDemoEmail } from '@/lib/demo-account'
 import { getClientBySlug, getReviewForClient, requireUser } from '@/lib/workspace'
 
 export const metadata: Metadata = { title: 'Annual review report' }
@@ -24,7 +26,16 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         >
           <ChevronLeft aria-hidden className="size-3.5" /> Back to review
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-2">
+          <EmailReportButton
+            clientSlug={client.id}
+            approved={review?.status === 'Approved'}
+            defaultTo={isDemoEmail(user.email) ? DEMO_RECIPIENT_EMAIL : ''}
+            defaultSubject={`Your annual review report — ${client.name}`}
+            defaultMessage={`Dear ${client.firstName},\n\nPlease find attached your annual review report. It summarises your portfolio, how you're tracking against your goals, and my recommendations for the year ahead.\n\nKind regards,\n${user.name}`}
+          />
+          <PrintButton />
+        </div>
       </div>
       <ReviewReport
         client={client}
