@@ -80,7 +80,7 @@ export function ReviewWorkspace({ clientId }: { clientId: string }) {
               <h2 id="letter-h" className="text-sm font-semibold">
                 Draft review letter
               </h2>
-              <span className="text-xs text-muted-foreground">Prepared by Copilot · template v3.2</span>
+              <span className="text-xs text-muted-foreground">Prepared by AdviserOS · template v3.2</span>
             </div>
             <article className="mt-4 space-y-3 font-serif text-[15px] leading-relaxed">
               <p>Dear {client.firstName},</p>
@@ -94,7 +94,7 @@ export function ReviewWorkspace({ clientId }: { clientId: string }) {
                 {client.risk.tool} questionnaire completed {client.risk.assessedOn}.
               </p>
               <p className="rounded-md bg-warning-soft px-3 py-2 font-sans text-sm text-accent-foreground">
-                Adviser recommendation required — Copilot does not draft advice.
+                Adviser recommendation required — AdviserOS does not draft advice.
               </p>
             </article>
           </section>

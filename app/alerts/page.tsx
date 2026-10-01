@@ -15,7 +15,7 @@ const tone = {
 export default function AlertsPage() {
   return (
     <PageContainer>
-      <PageHeader title="Alerts" description="Detected by Copilot across your connected systems" />
+      <PageHeader title="Alerts" description="Detected by AdviserOS across your connected systems" />
       <ul className="divide-y rounded-xl border bg-card">
         {alerts.map((a) => {
           const inner = (

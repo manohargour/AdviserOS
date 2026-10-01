@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: '%s · AdviserOS',
   },
   description:
-    'Your AI copilot for client work. Bring client data, portfolios, risk information and documents together. AdviserOS prepares the work, surfaces what needs attention and leaves judgement with the adviser.',
+    'Your AI operating system for client work. Bring client data, portfolios, risk information and documents together. AdviserOS prepares the work, surfaces what needs attention and leaves judgement with the adviser.',
   generator: 'v0.app',
   icons: {
     icon: [

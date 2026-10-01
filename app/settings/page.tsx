@@ -5,10 +5,10 @@ import { ADVISER } from '@/lib/data'
 export const metadata: Metadata = { title: 'Settings' }
 
 const rules = [
-  ['Copilot drafts advice', 'Never — recommendations are always written by the adviser'],
+  ['AdviserOS drafts advice', 'Never — recommendations are always written by the adviser'],
   ['Client-facing documents', 'Require adviser approval before sending'],
-  ['Source citations', 'Shown for every number Copilot uses'],
-  ['Audit log', 'All Copilot actions recorded for compliance'],
+  ['Source citations', 'Shown for every number AdviserOS uses'],
+  ['Audit log', 'All AdviserOS actions recorded for compliance'],
 ]
 
 export default function SettingsPage() {
@@ -16,7 +16,7 @@ export default function SettingsPage() {
     <PageContainer>
       <PageHeader title="Settings" description={`${ADVISER.name} · ${ADVISER.firm}`} />
       <section className="rounded-xl border bg-card p-5">
-        <h2 className="text-sm font-semibold">Copilot guardrails</h2>
+        <h2 className="text-sm font-semibold">AdviserOS guardrails</h2>
         <dl className="mt-3 divide-y">
           {rules.map(([k, v]) => (
             <div key={k} className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">

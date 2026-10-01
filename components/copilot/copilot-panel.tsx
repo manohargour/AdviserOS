@@ -203,7 +203,7 @@ export function CopilotPanel() {
               size="icon-sm"
               className="xl:hidden"
               onClick={() => setPanelOpen(false)}
-              aria-label="Close Copilot"
+              aria-label="Close AdviserOS"
             >
               <X />
             </Button>
@@ -283,7 +283,7 @@ export function CopilotPanel() {
                   submit()
                 }
               }}
-              placeholder={contextClient ? `Ask about ${contextClient.firstName}…` : 'Ask or tell Copilot what to do…'}
+              placeholder={contextClient ? `Ask about ${contextClient.firstName}…` : 'Ask or tell AdviserOS what to do…'}
               className="max-h-32 min-h-8 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
             />
             <Button type="submit" size="icon-sm" disabled={!input.trim() || isWorking} aria-label="Send">
@@ -291,7 +291,7 @@ export function CopilotPanel() {
             </Button>
           </form>
           <p className="mt-2 text-center text-[10px] text-muted-foreground">
-            Copilot prepares the work. Advice and approval remain with you.
+            AdviserOS prepares the work. Advice and approval remain with you.
           </p>
         </div>
       </aside>

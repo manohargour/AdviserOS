@@ -36,7 +36,7 @@ export function ProductConcept() {
     <section aria-labelledby="concept" className="overflow-hidden rounded-2xl bg-sidebar p-6 text-sidebar-foreground md:p-8">
       <div className="max-w-2xl">
         <h2 id="concept" className="font-serif text-3xl font-medium tracking-tight text-sidebar-accent-foreground text-balance">
-          Your AI copilot for client work.
+          Your AI operating system for client work.
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-pretty">
           Bring client data, portfolios, risk information and documents together. AdviserOS prepares the work,

@@ -438,7 +438,7 @@ export const reviewsDue = [
 ] as { clientId?: string; name: string; due: string; readiness: number; status: string }[]
 
 export const tasks = [
-  { id: 't1', title: 'Approve John Smith annual review', client: 'John Smith', due: 'Today', source: 'Copilot draft', done: false },
+  { id: 't1', title: 'Approve John Smith annual review', client: 'John Smith', due: 'Today', source: 'AdviserOS draft', done: false },
   { id: 't2', title: 'Chase accountant re: BADR eligibility', client: 'Emma Thompson', due: 'Today', source: 'Meeting notes', done: false },
   { id: 't3', title: 'Assess portfolio against new risk profile', client: 'David Patel', due: 'Tomorrow', source: 'Risk alert', done: false },
   { id: 't4', title: 'Request updated passport', client: 'Olivia Brown', due: '5 Oct', source: 'Compliance', done: false },

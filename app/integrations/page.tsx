@@ -16,7 +16,7 @@ const available = [
 export default function IntegrationsPage() {
   return (
     <PageContainer>
-      <PageHeader title="Integrations" description="Connect more systems to give Copilot fuller context" />
+      <PageHeader title="Integrations" description="Connect more systems to give AdviserOS fuller context" />
       <ul className="divide-y rounded-xl border bg-card">
         {available.map((i) => (
           <li key={i.name} className="flex items-center justify-between gap-3 px-4 py-3">

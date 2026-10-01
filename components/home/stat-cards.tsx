@@ -4,7 +4,7 @@ import { ArrowUpRight } from 'lucide-react'
 const stats = [
   { value: '15', label: 'Reviews due', href: '/reviews', note: '6 this week' },
   { value: '6', label: 'Clients need attention', href: '/alerts', note: '1 high priority' },
-  { value: '8', label: 'Drafts ready for approval', href: '/reviews', note: 'Prepared by Copilot' },
+  { value: '8', label: 'Drafts ready for approval', href: '/reviews', note: 'Prepared by AdviserOS' },
   { value: '31 hrs', label: 'Estimated admin time saved this month', href: '/settings', note: '+6 hrs vs September' },
 ]
 

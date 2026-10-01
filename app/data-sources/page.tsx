@@ -9,7 +9,7 @@ export default function DataSourcesPage() {
     <PageContainer>
       <PageHeader
         title="Data Sources"
-        description="Your existing systems remain the systems of record. Copilot reads from them, never replaces them."
+        description="Your existing systems remain the systems of record. AdviserOS reads from them, never replaces them."
       />
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {dataSources.map((s) => (

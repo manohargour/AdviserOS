@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <CommandBar />
           <Button variant="outline" className="ml-auto xl:hidden" onClick={() => setPanelOpen(true)}>
             <Sparkles aria-hidden className="text-brass" />
-            <span className="hidden sm:inline">Copilot</span>
+            <span className="hidden sm:inline">AdviserOS</span>
           </Button>
         </header>
         <main className="flex-1 overflow-y-auto">{children}</main>

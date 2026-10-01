@@ -162,7 +162,7 @@ function Reviews({ client }: { client: Client }) {
     <div className="grid gap-4 md:grid-cols-2">
       <Card title="Upcoming review">
         <p className="font-serif text-2xl">{client.nextReview}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{client.reviewReadiness}% prepared by Copilot</p>
+        <p className="mt-1 text-sm text-muted-foreground">{client.reviewReadiness}% prepared by AdviserOS</p>
         <Link href={`/reviews/${client.id}`} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
           Open review workspace <ArrowRight aria-hidden className="size-3.5" />
         </Link>
