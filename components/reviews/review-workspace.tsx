@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { ArrowRight, Check, CircleCheck, Loader2, ShieldCheck } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { ArrowRight, Check, CircleCheck, FileText, Loader2, ShieldCheck } from 'lucide-react'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useAdviser, useReviewProgress } from '@/components/adviser/adviser-provider'
 import { AllocationBar } from '@/components/clients/allocation-bar'
 import { approveReview } from '@/app/actions/workspace'
@@ -64,6 +65,10 @@ export function ReviewWorkspace({
           </div>
         </div>
         <div className="flex flex-col items-start gap-1.5 md:items-end">
+          <div className="flex flex-wrap gap-2">
+          <Link href={`/reviews/${client.id}/report`} className={buttonVariants({ size: 'lg', variant: 'outline' })}>
+            <FileText aria-hidden /> View report
+          </Link>
           <Button
             size="lg"
             disabled={remaining > 0 || approved || saving}
@@ -79,6 +84,7 @@ export function ReviewWorkspace({
             )}
             {approved ? 'Review approved' : 'Approve review'}
           </Button>
+          </div>
           {approved && approvedAt && (
             <p className="text-xs text-muted-foreground">
               Approved {new Date(approvedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}

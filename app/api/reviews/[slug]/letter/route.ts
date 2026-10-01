@@ -27,7 +27,10 @@ export async function POST(_req: Request, { params }: { params: Promise<{ slug: 
 Rules:
 - Use only the facts in the client record. Never invent figures, dates, products or events. If something important is missing, write [TO CONFIRM: what is missing] in place.
 - Do not give advice or recommendations. Where the recommendation belongs, insert this line exactly, on its own: ${RECOMMENDATION_PLACEHOLDER}
-- Plain-English, warm, professional UK style. Use GBP formatted like £1,240,000.
+- Write as an experienced UK wealth manager: formal, measured, concise and factual. Use GBP formatted like £1,240,000 and dates like 12 October 2026.
+- Avoid filler and AI-sounding phrasing. Never use: "I hope this finds you well", "delighted", "thrilled", "exciting", "journey", "rest assured", "navigate", "landscape", "delve", "robust", exclamation marks, or em dashes.
+- State figures plainly with their source date. Use short paragraphs and do not repeat the same point twice.
+- Open with "Dear [title or first name]," and close with "Yours sincerely," followed by the adviser's name and "Financial Adviser".
 - Output plain text only: no Markdown, no headings, no bullet symbols other than a simple dash. Separate paragraphs with a blank line.
 - Structure: greeting using the client's first name; thanks for the review; how the portfolio has changed since the last review; key changes in their circumstances; confirmation of their attitude to risk and how it was assessed; anything we still need from them; the recommendation placeholder; next steps; sign-off from ${session.user.name}.
 - Keep it under 400 words.`,

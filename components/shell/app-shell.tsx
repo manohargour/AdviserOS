@@ -28,10 +28,12 @@ function Shell({ children }: { children: React.ReactNode }) {
   const { start } = useTour()
 
   return (
-    <div className="flex h-dvh overflow-hidden">
-      <AppSidebar open={navOpen} onNavigate={() => setNavOpen(false)} />
+    <div className="flex h-dvh overflow-hidden print:block print:h-auto print:overflow-visible">
+      <div className="contents print:hidden">
+        <AppSidebar open={navOpen} onNavigate={() => setNavOpen(false)} />
+      </div>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur md:px-6">
+        <header className="flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur md:px-6 print:hidden">
           <Button
             variant="ghost"
             size="icon"
@@ -51,9 +53,11 @@ function Shell({ children }: { children: React.ReactNode }) {
             <span className="hidden sm:inline">AdviserOS</span>
           </Button>
         </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto print:overflow-visible">{children}</main>
       </div>
-      <AdviserPanel />
+      <div className="contents print:hidden">
+        <AdviserPanel />
+      </div>
     </div>
   )
 }
