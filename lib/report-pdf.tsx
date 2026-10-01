@@ -21,7 +21,7 @@ const s = StyleSheet.create({
   cover: { backgroundColor: NAVY, color: '#e8e4da', paddingHorizontal: 44, paddingTop: 36, paddingBottom: 28 },
   firm: { fontFamily: 'Helvetica-Bold', fontSize: 11, color: '#ffffff' },
   eyebrow: { fontSize: 8, letterSpacing: 2, color: BRASS, fontFamily: 'Helvetica-Bold', textTransform: 'uppercase' },
-  h1: { fontFamily: 'Times-Roman', fontSize: 30, color: '#ffffff', marginTop: 6 },
+  h1: { fontFamily: 'Times-Roman', fontSize: 30, lineHeight: 1.2, color: '#ffffff', marginTop: 8, marginBottom: 6 },
   metaRow: { flexDirection: 'row', marginTop: 20, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: '#3a4558' },
   metaCell: { flex: 1 },
   metaLabel: { fontSize: 7, color: '#a4abb8', textTransform: 'uppercase', letterSpacing: 1 },
@@ -98,13 +98,13 @@ function ReportDocument({ client, adviserName, title, status, coverNote, letter,
               <Text style={s.firm}>{ADVISER.firm}</Text>
               <Text style={{ fontSize: 8, color: '#a4abb8' }}>Independent financial advice</Text>
             </View>
-            <Text style={{ fontSize: 7, color: BRASS, borderWidth: 0.5, borderColor: BRASS, paddingHorizontal: 5, paddingVertical: 3, letterSpacing: 1.5 }}>
-              PRIVATE &amp; CONFIDENTIAL
-            </Text>
+            <View style={{ alignSelf: 'flex-start', borderWidth: 0.5, borderColor: BRASS, paddingHorizontal: 6, paddingVertical: 4 }}>
+              <Text style={{ fontSize: 7, lineHeight: 1, color: BRASS, letterSpacing: 1.5 }}>PRIVATE &amp; CONFIDENTIAL</Text>
+            </View>
           </View>
           <Text style={[s.eyebrow, { marginTop: 30 }]}>Annual Review Report</Text>
           <Text style={s.h1}>{client.name}</Text>
-          <Text style={{ fontSize: 9, marginTop: 4 }}>
+          <Text style={{ fontSize: 9, lineHeight: 1.4, color: '#c9ced8' }}>
             Review period {client.lastReview} to {client.nextReview}
           </Text>
           <View style={s.metaRow}>
