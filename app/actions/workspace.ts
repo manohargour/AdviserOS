@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { alerts, clients, reviews, tasks } from '@/lib/db/schema'
 import { logActivity } from '@/lib/activity'
+import { getClientBySlug, saveLetterDraft } from '@/lib/workspace'
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -63,6 +64,25 @@ export async function dismissAlert(id: number) {
   }
   revalidatePath('/alerts')
   revalidatePath('/activity')
+}
+
+export async function saveReviewLetter(clientSlug: string, letter: string) {
+  const userId = await getUserId()
+  if (typeof clientSlug !== 'string' || !/^[a-z0-9-]{1,64}$/.test(clientSlug)) throw new Error('Invalid client')
+  if (typeof letter !== 'string' || !letter.trim() || letter.length > 20000) throw new Error('Invalid letter')
+
+  const client = await getClientBySlug(userId, clientSlug)
+  if (!client) throw new Error('Client not found')
+
+  const savedAt = await saveLetterDraft(userId, client, letter.trim())
+  await logActivity(userId, {
+    action: 'letter.edited',
+    summary: `Edited the annual review letter for ${client.name}`,
+    clientSlug,
+  })
+  revalidatePath(`/reviews/${clientSlug}`)
+  revalidatePath('/activity')
+  return savedAt.toISOString()
 }
 
 export async function approveReview(clientSlug: string, confirmedItems: string[]) {

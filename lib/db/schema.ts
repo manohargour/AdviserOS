@@ -76,6 +76,8 @@ export const reviews = pgTable('reviews', {
   status: text('status').notNull(),
   confirmedItems: jsonb('confirmedItems').$type<string[]>().notNull().default([]),
   approvedAt: timestamp('approvedAt'),
+  letterDraft: text('letterDraft'),
+  letterUpdatedAt: timestamp('letterUpdatedAt'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 

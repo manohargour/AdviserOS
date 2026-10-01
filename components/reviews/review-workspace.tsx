@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useAdviser, useReviewProgress } from '@/components/adviser/adviser-provider'
 import { AllocationBar } from '@/components/clients/allocation-bar'
 import { approveReview } from '@/app/actions/workspace'
+import { ReviewLetter } from '@/components/reviews/review-letter'
 import { cn } from '@/lib/utils'
 import { allocation, gbp, type Client } from '@/lib/data'
 
@@ -13,10 +14,14 @@ export function ReviewWorkspace({
   client,
   initialApproved,
   approvedAt,
+  letterDraft,
+  letterUpdatedAt,
 }: {
   client: Client
   initialApproved: boolean
   approvedAt: string | null
+  letterDraft: string | null
+  letterUpdatedAt: string | null
 }) {
   const { confirmed, setConfirmed, send, isWorking } = useAdviser()
   const progress = useReviewProgress(client)
@@ -119,29 +124,13 @@ export function ReviewWorkspace({
             <AllocationBar rows={allocation(client)} />
           </section>
 
-          <section id="letter" aria-labelledby="letter-h" className="scroll-mt-6 rounded-xl border bg-card p-5">
-            <div className="flex items-center justify-between gap-2">
-              <h2 id="letter-h" className="text-sm font-semibold">
-                Draft review letter
-              </h2>
-              <span className="text-xs text-muted-foreground">Prepared by AdviserOS · template v3.2</span>
-            </div>
-            <article className="mt-4 space-y-3 font-serif text-[15px] leading-relaxed">
-              <p>Dear {client.firstName},</p>
-              <p>
-                Thank you for taking the time to review your financial plan with me. Since we last met in{' '}
-                {client.lastReview}, your portfolio has grown from {gbp(client.previousValue)} to{' '}
-                {gbp(client.portfolioValue)}.
-              </p>
-              <p>
-                Your attitude to risk remains {client.risk.label} ({client.risk.score}/10), as confirmed by your{' '}
-                {client.risk.tool} questionnaire completed {client.risk.assessedOn}.
-              </p>
-              <p className="rounded-md bg-warning-soft px-3 py-2 font-sans text-sm text-accent-foreground">
-                Adviser recommendation required — AdviserOS does not draft advice.
-              </p>
-            </article>
-          </section>
+          <ReviewLetter
+            clientSlug={client.id}
+            clientName={client.name}
+            initialDraft={letterDraft}
+            initialSavedAt={letterUpdatedAt}
+            locked={approved}
+          />
         </div>
 
         <aside className="space-y-6 lg:col-span-2">

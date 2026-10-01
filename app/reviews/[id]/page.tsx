@@ -23,6 +23,8 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
         client={client}
         initialApproved={review?.status === 'Approved'}
         approvedAt={review?.approvedAt?.toISOString() ?? null}
+        letterDraft={review?.letterDraft ?? null}
+        letterUpdatedAt={review?.letterUpdatedAt?.toISOString() ?? null}
       />
     </PageContainer>
   )

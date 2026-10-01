@@ -11,6 +11,8 @@ export type ActivityAction =
   | 'alert.dismissed'
   | 'review.approved'
   | 'conversation.started'
+  | 'letter.drafted'
+  | 'letter.edited'
 
 export type ActivityEntry = typeof activityLog.$inferSelect
 

@@ -93,6 +93,31 @@ export async function getReviewForClient(userId: string, slug: string) {
   return row
 }
 
+export async function saveLetterDraft(
+  userId: string,
+  client: { id: string; name: string; nextReview: string },
+  letter: string,
+) {
+  const now = new Date()
+  const updated = await db
+    .update(reviews)
+    .set({ letterDraft: letter, letterUpdatedAt: now })
+    .where(and(eq(reviews.userId, userId), eq(reviews.clientSlug, client.id)))
+    .returning({ id: reviews.id })
+  if (updated.length === 0) {
+    await db.insert(reviews).values({
+      userId,
+      clientSlug: client.id,
+      name: client.name,
+      due: client.nextReview,
+      status: 'In progress',
+      letterDraft: letter,
+      letterUpdatedAt: now,
+    })
+  }
+  return now
+}
+
 export async function getTasks(userId: string) {
   return db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(asc(tasks.done), asc(tasks.id))
 }
