@@ -37,6 +37,14 @@ export async function ensureSeeded(userId: string) {
       .limit(1)
     if (again) return
 
+    await seedWorkspace(tx, userId)
+  })
+}
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
+
+export async function seedWorkspace(tx: Tx, userId: string) {
+  {
     await tx.insert(clients).values(
       sampleClients.map((c) => ({ userId, slug: c.id, name: c.name, status: c.status, data: c })),
     )
@@ -63,7 +71,7 @@ export async function ensureSeeded(userId: string) {
         time: a.time,
       })),
     )
-  })
+  }
 }
 
 export async function getClients(userId: string) {

@@ -1,8 +1,13 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useSWRConfig } from 'swr'
+import { resetDemoData } from '@/app/actions/demo'
+import { isDemoEmail } from '@/lib/demo-account'
 import {
+  RotateCcw,
   LogOut,
   Bell,
   CalendarCheck,
@@ -30,10 +35,80 @@ function initialsOf(name: string) {
     .join('')
 }
 
+function DemoReset() {
+  const router = useRouter()
+  const { mutate } = useSWRConfig()
+  const [confirming, setConfirming] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  function handleReset() {
+    setError(null)
+    startTransition(async () => {
+      try {
+        await resetDemoData()
+        await mutate(() => true)
+        setConfirming(false)
+        router.refresh()
+      } catch {
+        setError('Reset failed. Please try again.')
+      }
+    })
+  }
+
+  if (!confirming) {
+    return (
+      <div className="px-3 pt-3">
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <RotateCcw aria-hidden className="size-3.5" />
+          Reset demo data
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div role="alertdialog" aria-labelledby="demo-reset-title" className="px-3 pt-3">
+      <div className="rounded-md border border-sidebar-border bg-sidebar-accent/60 p-3">
+        <p id="demo-reset-title" className="text-xs font-medium text-sidebar-accent-foreground">
+          Reset the demo for everyone?
+        </p>
+        <p className="mt-1 text-[11px] leading-relaxed text-sidebar-foreground/80">
+          Restores the sample clients and clears letters, chats and activity for anyone using this login.
+        </p>
+        {error && <p className="mt-1.5 text-[11px] text-destructive">{error}</p>}
+        <div className="mt-2.5 flex gap-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={pending}
+            className="flex-1 rounded-md bg-primary px-2 py-1.5 text-xs font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+          >
+            {pending ? 'Resetting…' : 'Reset'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            disabled={pending}
+            className="flex-1 rounded-md px-2 py-1.5 text-xs text-sidebar-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground disabled:opacity-60"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function UserFooter() {
   const router = useRouter()
   const { data: session } = authClient.useSession()
   const name = session?.user.name || session?.user.email || ''
+  const isDemo = isDemoEmail(session?.user.email)
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -42,6 +117,8 @@ function UserFooter() {
   }
 
   return (
+    <>
+    {isDemo && <DemoReset />}
     <div className="flex items-center gap-2.5 border-t border-sidebar-border px-4 py-3">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">
         {name ? initialsOf(name) : ''}
@@ -59,6 +136,7 @@ function UserFooter() {
         <LogOut aria-hidden className="size-4" />
       </button>
     </div>
+    </>
   )
 }
 

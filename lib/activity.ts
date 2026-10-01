@@ -13,6 +13,7 @@ export type ActivityAction =
   | 'conversation.started'
   | 'letter.drafted'
   | 'letter.edited'
+  | 'workspace.reset'
 
 export type ActivityEntry = typeof activityLog.$inferSelect
 
