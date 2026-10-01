@@ -19,7 +19,7 @@ export async function requireUser() {
 }
 
 /** Gives each new adviser a starter book of sample clients so the workspace is never empty. */
-async function ensureSeeded(userId: string) {
+export async function ensureSeeded(userId: string) {
   const [existing] = await db
     .select({ id: clients.id })
     .from(clients)

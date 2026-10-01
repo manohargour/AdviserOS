@@ -1,18 +1,20 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport, type UIMessage } from 'ai'
+import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { planFor, type AdviserPlan } from '@/lib/adviser-engine'
 import { getClient, type Client } from '@/lib/data'
 
-export type AdviserMessage =
-  | { id: string; role: 'user'; text: string }
-  | { id: string; role: 'adviser'; plan: AdviserPlan; visibleSteps: number; done: boolean }
+export type AdviserMessage = UIMessage
 
 type AdviserContextValue = {
   messages: AdviserMessage[]
   isWorking: boolean
+  error?: Error
   send: (prompt: string) => void
+  stop: () => void
+  retry: () => void
   clear: () => void
   contextClient?: Client
   panelOpen: boolean
@@ -25,8 +27,6 @@ type AdviserContextValue = {
 
 const AdviserContext = createContext<AdviserContextValue | null>(null)
 
-const STEP_DELAY = 420
-
 function clientIdFromPath(pathname: string) {
   const match = pathname.match(/^\/(?:clients|reviews)\/([^/]+)/)
   return match ? match[1] : undefined
@@ -34,61 +34,55 @@ function clientIdFromPath(pathname: string) {
 
 export function AdviserProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const contextClient = useMemo(() => {
-    const id = clientIdFromPath(pathname)
-    return id ? getClient(id) : undefined
-  }, [pathname])
+  const router = useRouter()
+  const contextSlug = clientIdFromPath(pathname)
+  const contextClient = useMemo(() => (contextSlug ? getClient(contextSlug) : undefined), [contextSlug])
 
-  const [messages, setMessages] = useState<AdviserMessage[]>([])
-  const [isWorking, setIsWorking] = useState(false)
+  const slugRef = useRef(contextSlug)
+  slugRef.current = contextSlug
+
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: '/api/adviser/chat',
+        body: () => ({ clientSlug: slugRef.current }),
+      }),
+    [],
+  )
+
+  const { messages, sendMessage, status, stop, error, regenerate, setMessages, clearError } = useChat({
+    transport,
+    onFinish: ({ message }) => {
+      if (message.parts.some((part) => part.type === 'tool-createTask')) router.refresh()
+    },
+  })
+
+  const isWorking = status === 'submitted' || status === 'streaming'
+
   const [panelOpen, setPanelOpen] = useState(false)
   const [confirmed, setConfirmedState] = useState<Record<string, boolean>>({})
   const [dismissed, setDismissed] = useState<Record<string, boolean>>({})
-  const counter = useRef(0)
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([])
 
   const send = useCallback(
     (prompt: string) => {
-      const trimmed = prompt.trim()
-      if (!trimmed) return
-      const plan = planFor(trimmed, contextClient?.id)
-      const userId = `m${counter.current++}`
-      const adviserId = `m${counter.current++}`
+      const text = prompt.trim()
+      if (!text || isWorking) return
       setPanelOpen(true)
-      setIsWorking(true)
-      setMessages((prev) => [
-        ...prev,
-        { id: userId, role: 'user', text: trimmed },
-        { id: adviserId, role: 'adviser', plan, visibleSteps: 0, done: false },
-      ])
-
-      const update = (patch: { visibleSteps?: number; done?: boolean }) =>
-        setMessages((prev) =>
-          prev.map((m) => (m.id === adviserId && m.role === 'adviser' ? { ...m, ...patch } : m)),
-        )
-
-      plan.steps.forEach((_, index) => {
-        timers.current.push(setTimeout(() => update({ visibleSteps: index + 1 }), STEP_DELAY * (index + 1)))
-      })
-      timers.current.push(
-        setTimeout(
-          () => {
-            update({ done: true })
-            setIsWorking(false)
-          },
-          STEP_DELAY * (plan.steps.length + 1),
-        ),
-      )
+      sendMessage({ text })
     },
-    [contextClient?.id],
+    [isWorking, sendMessage],
   )
 
   const clear = useCallback(() => {
-    timers.current.forEach(clearTimeout)
-    timers.current = []
+    stop()
+    clearError()
     setMessages([])
-    setIsWorking(false)
-  }, [])
+  }, [stop, clearError, setMessages])
+
+  const retry = useCallback(() => {
+    clearError()
+    regenerate()
+  }, [clearError, regenerate])
 
   const setConfirmed = useCallback((id: string, value: boolean) => {
     setConfirmedState((prev) => ({ ...prev, [id]: value }))
@@ -100,7 +94,10 @@ export function AdviserProvider({ children }: { children: React.ReactNode }) {
     () => ({
       messages,
       isWorking,
+      error,
       send,
+      stop,
+      retry,
       clear,
       contextClient,
       panelOpen,
@@ -110,7 +107,7 @@ export function AdviserProvider({ children }: { children: React.ReactNode }) {
       dismissed,
       dismiss,
     }),
-    [messages, isWorking, send, clear, contextClient, panelOpen, confirmed, setConfirmed, dismissed, dismiss],
+    [messages, isWorking, error, send, stop, retry, clear, contextClient, panelOpen, confirmed, setConfirmed, dismissed, dismiss],
   )
 
   return <AdviserContext.Provider value={value}>{children}</AdviserContext.Provider>

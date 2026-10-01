@@ -1,14 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUp, Check, Clock, Loader2, RotateCcw, Sparkles, X } from 'lucide-react'
+import { AlertCircle, ArrowUp, Clock, RotateCcw, Sparkles, Square, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LogoMark } from '@/components/brand/logo-mark'
 import { cn } from '@/lib/utils'
 import { suggestedPromptsFor } from '@/lib/adviser-engine'
 import { getClient, type Client } from '@/lib/data'
-import { useAdviser, type AdviserMessage } from './adviser-provider'
-import { AdviserResponse } from './adviser-responses'
+import { useAdviser } from './adviser-provider'
+import { AdviserMessage } from './adviser-message'
 
 function ProactiveCard({ client }: { client?: Client }) {
   const { send, dismissed, dismiss, isWorking } = useAdviser()
@@ -99,53 +99,8 @@ function ProactiveCard({ client }: { client?: Client }) {
   )
 }
 
-function Message({ message }: { message: AdviserMessage }) {
-  if (message.role === 'user') {
-    return (
-      <div className="flex justify-end">
-        <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-sm text-primary-foreground">
-          {message.text}
-        </p>
-      </div>
-    )
-  }
-
-  const { plan, visibleSteps, done } = message
-  return (
-    <div className="flex gap-2.5">
-      <LogoMark className="mt-0.5 size-6 rounded text-xs" />
-      <div className="min-w-0 flex-1 text-sm">
-        {plan.steps.length > 0 && (
-          <ol className="mb-2 space-y-1" aria-label="Actions taken">
-            {plan.steps.map((step, i) => {
-              const complete = i < visibleSteps
-              const active = i === visibleSteps && !done
-              if (!complete && !active) return null
-              return (
-                <li key={step} className="flex items-center gap-2 text-[13px] text-muted-foreground">
-                  {complete ? (
-                    <Check aria-hidden className="size-3.5 text-positive" />
-                  ) : (
-                    <Loader2 aria-hidden className="size-3.5 animate-spin" />
-                  )}
-                  <span className={cn(complete && 'text-foreground/80')}>{step}</span>
-                </li>
-              )
-            })}
-          </ol>
-        )}
-        {done && (
-          <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
-            <AdviserResponse plan={plan} />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 export function AdviserPanel() {
-  const { messages, send, clear, isWorking, contextClient, panelOpen, setPanelOpen } = useAdviser()
+  const { messages, send, stop, retry, error, clear, isWorking, contextClient, panelOpen, setPanelOpen } = useAdviser()
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const prompts = suggestedPromptsFor(contextClient)
@@ -222,9 +177,23 @@ export function AdviserPanel() {
 
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4" aria-live="polite">
           <ProactiveCard client={contextClient} />
-          {messages.map((m) => (
-            <Message key={m.id} message={m} />
+          {messages.map((m, i) => (
+            <AdviserMessage key={m.id} message={m} streaming={isWorking && i === messages.length - 1} />
           ))}
+          {isWorking && messages.at(-1)?.role === 'user' && (
+            <AdviserMessage message={{ id: 'pending', role: 'assistant', parts: [] }} streaming />
+          )}
+          {error && (
+            <div role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <AlertCircle aria-hidden className="mt-0.5 size-4 shrink-0 text-destructive" />
+              <div className="flex-1">
+                <p>AdviserOS couldn&apos;t finish that request.</p>
+                <Button size="sm" variant="outline" className="mt-2" onClick={retry}>
+                  Try again
+                </Button>
+              </div>
+            </div>
+          )}
           {messages.length === 0 && (
             <div>
               <p className="mb-2 text-xs font-medium text-muted-foreground">Suggested</p>
@@ -286,9 +255,15 @@ export function AdviserPanel() {
               placeholder={contextClient ? `Ask about ${contextClient.firstName}…` : 'Ask or tell AdviserOS what to do…'}
               className="max-h-32 min-h-8 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
             />
-            <Button type="submit" size="icon-sm" disabled={!input.trim() || isWorking} aria-label="Send">
-              <ArrowUp />
-            </Button>
+            {isWorking ? (
+              <Button type="button" size="icon-sm" variant="outline" onClick={stop} aria-label="Stop generating">
+                <Square className="fill-current" />
+              </Button>
+            ) : (
+              <Button type="submit" size="icon-sm" disabled={!input.trim()} aria-label="Send">
+                <ArrowUp />
+              </Button>
+            )}
           </form>
           <p className="mt-2 text-center text-[10px] text-muted-foreground">
             AdviserOS prepares the work. Advice and approval remain with you.
