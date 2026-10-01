@@ -8,6 +8,7 @@ import { ClientTabs } from '@/components/clients/client-tabs'
 import { AskAdviserButton } from '@/components/adviser/ask-adviser-button'
 import { gbp } from '@/lib/data'
 import { getClientBySlug, requireUser } from '@/lib/workspace'
+import { formatWhen, getActivity } from '@/lib/activity'
 
 export const metadata: Metadata = { title: 'Client' }
 
@@ -53,7 +54,15 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </div>
-      <ClientTabs client={client} />
+          <ClientTabs
+            client={client}
+            events={(await getActivity(user.id, { clientSlug: client.id, limit: 50 })).map((e) => ({
+              id: e.id,
+              when: formatWhen(e.createdAt),
+              summary: e.summary,
+              actor: e.actor,
+            }))}
+          />
     </PageContainer>
   )
 }

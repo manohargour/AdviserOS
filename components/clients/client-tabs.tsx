@@ -196,16 +196,53 @@ function Documents({ client }: { client: Client }) {
   )
 }
 
-function Activity({ client }: { client: Client }) {
+export type ClientEvent = { id: number; when: string; summary: string; actor: 'adviser' | 'assistant' }
+
+function Activity({ client, events }: { client: Client; events: ClientEvent[] }) {
   return (
-    <ol className="space-y-4 rounded-xl border bg-card p-4">
-      {client.activity.map((a) => (
-        <li key={a.date + a.text} className="flex gap-4">
-          <span className="w-24 shrink-0 text-xs text-muted-foreground">{a.date}</span>
-          <span className="text-sm">{a.text}</span>
-        </li>
-      ))}
-    </ol>
+    <div className="space-y-4">
+      <section className="rounded-xl border bg-card p-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">Audit trail</h2>
+          <Link href="/activity" className="text-xs text-muted-foreground hover:text-foreground">
+            All activity
+          </Link>
+        </div>
+        {events.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nothing recorded yet. Approvals, task changes and AdviserOS actions for {client.firstName} will appear here.
+          </p>
+        ) : (
+          <ol className="space-y-3">
+            {events.map((e) => (
+              <li key={e.id} className="flex gap-4">
+                <span className="w-24 shrink-0 text-xs tabular-nums text-muted-foreground">{e.when}</span>
+                <span className="flex-1 text-sm">{e.summary}</span>
+                <span
+                  className={
+                    e.actor === 'assistant'
+                      ? 'h-fit shrink-0 rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground'
+                      : 'h-fit shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground'
+                  }
+                >
+                  {e.actor === 'assistant' ? 'AdviserOS' : 'You'}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+      <Card title="Earlier history">
+        <ol className="space-y-3">
+          {client.activity.map((a) => (
+            <li key={a.date + a.text} className="flex gap-4">
+              <span className="w-24 shrink-0 text-xs text-muted-foreground">{a.date}</span>
+              <span className="text-sm">{a.text}</span>
+            </li>
+          ))}
+        </ol>
+      </Card>
+    </div>
   )
 }
 
@@ -215,10 +252,9 @@ const tabs = [
   { value: 'goals', label: 'Goals', Panel: Goals },
   { value: 'reviews', label: 'Reviews', Panel: Reviews },
   { value: 'documents', label: 'Documents', Panel: Documents },
-  { value: 'activity', label: 'Activity', Panel: Activity },
 ]
 
-export function ClientTabs({ client }: { client: Client }) {
+export function ClientTabs({ client, events = [] }: { client: Client; events?: ClientEvent[] }) {
   return (
     <Tabs defaultValue="overview" className="gap-4">
       <div className="-mx-4 overflow-x-auto px-4">
@@ -228,6 +264,9 @@ export function ClientTabs({ client }: { client: Client }) {
               {t.label}
             </TabsTrigger>
           ))}
+          <TabsTrigger value="activity" className="px-3">
+            Activity
+          </TabsTrigger>
         </TabsList>
       </div>
       {tabs.map(({ value, Panel }) => (
@@ -235,6 +274,9 @@ export function ClientTabs({ client }: { client: Client }) {
           <Panel client={client} />
         </TabsContent>
       ))}
+      <TabsContent value="activity">
+        <Activity client={client} events={events} />
+      </TabsContent>
     </Tabs>
   )
 }

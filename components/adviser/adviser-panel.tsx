@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AlertCircle, ArrowUp, Clock, RotateCcw, Sparkles, Square, X } from 'lucide-react'
+import { AlertCircle, ArrowUp, Clock, History, Plus, Sparkles, Square, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LogoMark } from '@/components/brand/logo-mark'
 import { cn } from '@/lib/utils'
@@ -99,9 +99,80 @@ function ProactiveCard({ client }: { client?: Client }) {
   )
 }
 
+const relativeTime = new Intl.RelativeTimeFormat('en-GB', { numeric: 'auto' })
+
+function timeAgo(iso: string) {
+  const minutes = Math.round((new Date(iso).getTime() - Date.now()) / 60000)
+  if (Math.abs(minutes) < 60) return relativeTime.format(minutes, 'minute')
+  const hours = Math.round(minutes / 60)
+  if (Math.abs(hours) < 24) return relativeTime.format(hours, 'hour')
+  return relativeTime.format(Math.round(hours / 24), 'day')
+}
+
+function HistoryList({ onSelect }: { onSelect: () => void }) {
+  const { threads, threadsLoading, threadId, openThread, removeThread } = useAdviser()
+
+  if (threadsLoading) {
+    return (
+      <ul className="space-y-2" aria-busy>
+        {[0, 1, 2].map((i) => (
+          <li key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
+        ))}
+      </ul>
+    )
+  }
+
+  if (threads.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+        No saved conversations yet. Ask AdviserOS something and it will be kept here.
+      </div>
+    )
+  }
+
+  return (
+    <ul className="space-y-1.5">
+      {threads.map((t) => {
+        const client = t.clientSlug ? getClient(t.clientSlug) : undefined
+        return (
+          <li key={t.id} className="group relative">
+            <button
+              type="button"
+              onClick={async () => {
+                await openThread(t.id)
+                onSelect()
+              }}
+              aria-current={t.id === threadId ? 'true' : undefined}
+              className={cn(
+                'w-full rounded-lg border bg-background px-3 py-2 pr-9 text-left transition-colors hover:border-primary/30 hover:bg-muted',
+                t.id === threadId && 'border-primary/40 bg-muted',
+              )}
+            >
+              <span className="line-clamp-1 text-sm font-medium">{t.title}</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                {client ? `${client.name} · ` : ''}
+                {timeAgo(t.updatedAt)}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => removeThread(t.id)}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-background hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+              aria-label={`Delete conversation: ${t.title}`}
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 export function AdviserPanel() {
   const { messages, send, stop, retry, error, clear, isWorking, contextClient, panelOpen, setPanelOpen } = useAdviser()
   const [input, setInput] = useState('')
+  const [showHistory, setShowHistory] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const prompts = suggestedPromptsFor(contextClient)
 
@@ -112,6 +183,7 @@ export function AdviserPanel() {
 
   const submit = () => {
     if (!input.trim() || isWorking) return
+    setShowHistory(false)
     send(input)
     setInput('')
   }
@@ -148,11 +220,27 @@ export function AdviserPanel() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {messages.length > 0 && (
-              <Button variant="ghost" size="icon-sm" onClick={clear} aria-label="Clear conversation">
-                <RotateCcw />
-              </Button>
-            )}
+            <Button
+              variant={showHistory ? 'secondary' : 'ghost'}
+              size="icon-sm"
+              onClick={() => setShowHistory((v) => !v)}
+              aria-label="Conversation history"
+              aria-pressed={showHistory}
+            >
+              <History />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => {
+                clear()
+                setShowHistory(false)
+              }}
+              disabled={messages.length === 0 && !showHistory}
+              aria-label="New conversation"
+            >
+              <Plus />
+            </Button>
             <Button
               variant="ghost"
               size="icon-sm"
@@ -175,6 +263,12 @@ export function AdviserPanel() {
           )}
         </div>
 
+        {showHistory ? (
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">Recent conversations</p>
+            <HistoryList onSelect={() => setShowHistory(false)} />
+          </div>
+        ) : (
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4" aria-live="polite">
           <ProactiveCard client={contextClient} />
           {messages.map((m, i) => (
@@ -213,6 +307,7 @@ export function AdviserPanel() {
             </div>
           )}
         </div>
+        )}
 
         <div className="border-t p-3">
           {messages.length > 0 && (

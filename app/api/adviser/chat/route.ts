@@ -13,14 +13,20 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { tasks } from '@/lib/db/schema'
 import { ensureSeeded, getAlerts, getClientBySlug, getClients, getReviews, getTasks } from '@/lib/workspace'
+import { logActivity } from '@/lib/activity'
+import { getThread, saveThread, THREAD_ID_PATTERN, threadOwnedByAnotherUser } from '@/lib/chat-store'
 
 export const maxDuration = 60
 
 const MAX_MESSAGES = 40
 
 const requestSchema = z.object({
+  id: z.string().regex(THREAD_ID_PATTERN),
   messages: z.array(z.any()).min(1).max(MAX_MESSAGES),
-  clientSlug: z.string().max(100).optional(),
+  clientSlug: z
+    .string()
+    .regex(/^[a-z0-9-]{1,64}$/)
+    .optional(),
 })
 
 function instructionsFor(adviserName: string, clientSlug?: string) {
@@ -42,8 +48,23 @@ export async function POST(req: Request) {
 
   const parsed = requestSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return new Response('Invalid request', { status: 400 })
-  const { messages, clientSlug } = parsed.data
+  const { id: threadId, messages, clientSlug } = parsed.data
+  if (await threadOwnedByAnotherUser(userId, threadId)) return new Response('Forbidden', { status: 403 })
   await ensureSeeded(userId)
+
+  const existingThread = await getThread(userId, threadId)
+  const threadClientSlug = existingThread?.clientSlug ?? clientSlug ?? null
+  if (!existingThread) {
+    const contextClient = clientSlug ? await getClientBySlug(userId, clientSlug) : null
+    await logActivity(userId, {
+      actor: 'adviser',
+      action: 'conversation.started',
+      summary: contextClient
+        ? `Started an AdviserOS conversation about ${contextClient.name}`
+        : 'Started an AdviserOS conversation about the client book',
+      clientSlug: contextClient ? clientSlug : null,
+    })
+  }
 
   const result = streamText({
     model: 'anthropic/claude-sonnet-5.5',
@@ -116,6 +137,14 @@ export async function POST(req: Request) {
             .insert(tasks)
             .values({ userId, title, client, due, source: 'AdviserOS' })
             .returning({ id: tasks.id })
+          const book = await getClients(userId)
+          const matched = book.find((c) => c.name.toLowerCase() === client.toLowerCase())
+          await logActivity(userId, {
+            actor: 'assistant',
+            action: 'task.created',
+            summary: `AdviserOS added task "${title}" (due ${due})`,
+            clientSlug: matched?.id ?? null,
+          })
           return { created: true, id: created.id, title, client, due }
         },
       }),
@@ -123,6 +152,16 @@ export async function POST(req: Request) {
   })
 
   return createUIMessageStreamResponse({
-    stream: toUIMessageStream({ stream: result.stream }),
+    stream: toUIMessageStream({
+      stream: result.stream,
+      originalMessages: messages as UIMessage[],
+      onEnd: async ({ messages: finalMessages }) => {
+        try {
+          await saveThread(userId, threadId, threadClientSlug, finalMessages)
+        } catch (error) {
+          console.error('Failed to save AdviserOS conversation', error)
+        }
+      },
+    }),
   })
 }

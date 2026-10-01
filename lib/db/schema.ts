@@ -101,3 +101,23 @@ export const alerts = pgTable('alerts', {
   dismissed: boolean('dismissed').notNull().default(false),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
+
+export const activityLog = pgTable('activity_log', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  clientSlug: text('clientSlug'),
+  actor: text('actor').$type<'adviser' | 'assistant'>().notNull(),
+  action: text('action').notNull(),
+  summary: text('summary').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
+export const chatThreads = pgTable('chat_threads', {
+  id: text('id').primaryKey(),
+  userId: text('userId').notNull(),
+  clientSlug: text('clientSlug'),
+  title: text('title').notNull(),
+  messages: jsonb('messages').$type<unknown[]>().notNull().default([]),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})

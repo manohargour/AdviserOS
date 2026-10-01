@@ -14,6 +14,7 @@ import {
   Settings,
   Users,
   type LucideIcon,
+  History,
 } from 'lucide-react'
 import { LogoMark } from '@/components/brand/logo-mark'
 import { cn } from '@/lib/utils'
@@ -67,6 +68,7 @@ const primary: { href: string; label: string; icon: LucideIcon; count?: number }
   { href: '/reviews', label: 'Reviews', icon: CalendarCheck, count: 15 },
   { href: '/tasks', label: 'Tasks', icon: ListChecks, count: 5 },
   { href: '/alerts', label: 'Alerts', icon: Bell, count: 6 },
+  { href: '/activity', label: 'Activity', icon: History },
   { href: '/documents', label: 'Documents', icon: FileText },
   { href: '/data-sources', label: 'Data Sources', icon: Database },
 ]

@@ -1,12 +1,26 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport, type UIMessage } from 'ai'
+import { DefaultChatTransport, generateId, type UIMessage } from 'ai'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import useSWR from 'swr'
 import { getClient, type Client } from '@/lib/data'
 
 export type AdviserMessage = UIMessage
+
+export type ThreadSummary = {
+  id: string
+  title: string
+  clientSlug: string | null
+  updatedAt: string
+}
+
+const fetchJson = async <T,>(url: string): Promise<T> => {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+  return res.json()
+}
 
 type AdviserContextValue = {
   messages: AdviserMessage[]
@@ -16,6 +30,11 @@ type AdviserContextValue = {
   stop: () => void
   retry: () => void
   clear: () => void
+  threadId: string
+  threads: ThreadSummary[]
+  threadsLoading: boolean
+  openThread: (id: string) => Promise<void>
+  removeThread: (id: string) => Promise<void>
   contextClient?: Client
   panelOpen: boolean
   setPanelOpen: (open: boolean) => void
@@ -50,9 +69,23 @@ export function AdviserProvider({ children }: { children: React.ReactNode }) {
     [],
   )
 
-  const { messages, sendMessage, status, stop, error, regenerate, setMessages, clearError } = useChat({
+  const [thread, setThread] = useState<{ id: string; messages: AdviserMessage[] }>(() => ({
+    id: generateId(),
+    messages: [],
+  }))
+
+  const {
+    data: threads = [],
+    isLoading: threadsLoading,
+    mutate: refreshThreads,
+  } = useSWR<ThreadSummary[]>('/api/adviser/threads', fetchJson, { revalidateOnFocus: false })
+
+  const { messages, sendMessage, status, stop, error, regenerate, clearError } = useChat({
+    id: thread.id,
+    messages: thread.messages,
     transport,
     onFinish: ({ message }) => {
+      refreshThreads()
       if (message.parts.some((part) => part.type === 'tool-createTask')) router.refresh()
     },
   })
@@ -76,8 +109,30 @@ export function AdviserProvider({ children }: { children: React.ReactNode }) {
   const clear = useCallback(() => {
     stop()
     clearError()
-    setMessages([])
-  }, [stop, clearError, setMessages])
+    setThread({ id: generateId(), messages: [] })
+  }, [stop, clearError])
+
+  const openThread = useCallback(
+    async (id: string) => {
+      stop()
+      clearError()
+      const saved = await fetchJson<{ id: string; messages: AdviserMessage[] }>(
+        `/api/adviser/threads/${encodeURIComponent(id)}`,
+      )
+      setThread({ id: saved.id, messages: saved.messages })
+      setPanelOpen(true)
+    },
+    [stop, clearError],
+  )
+
+  const removeThread = useCallback(
+    async (id: string) => {
+      await fetch(`/api/adviser/threads/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      if (id === thread.id) setThread({ id: generateId(), messages: [] })
+      refreshThreads()
+    },
+    [thread.id, refreshThreads],
+  )
 
   const retry = useCallback(() => {
     clearError()
@@ -99,6 +154,11 @@ export function AdviserProvider({ children }: { children: React.ReactNode }) {
       stop,
       retry,
       clear,
+      threadId: thread.id,
+      threads,
+      threadsLoading,
+      openThread,
+      removeThread,
       contextClient,
       panelOpen,
       setPanelOpen,
@@ -107,7 +167,26 @@ export function AdviserProvider({ children }: { children: React.ReactNode }) {
       dismissed,
       dismiss,
     }),
-    [messages, isWorking, error, send, stop, retry, clear, contextClient, panelOpen, confirmed, setConfirmed, dismissed, dismiss],
+    [
+      messages,
+      isWorking,
+      error,
+      send,
+      stop,
+      retry,
+      clear,
+      thread.id,
+      threads,
+      threadsLoading,
+      openThread,
+      removeThread,
+      contextClient,
+      panelOpen,
+      confirmed,
+      setConfirmed,
+      dismissed,
+      dismiss,
+    ],
   )
 
   return <AdviserContext.Provider value={value}>{children}</AdviserContext.Provider>
