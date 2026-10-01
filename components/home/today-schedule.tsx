@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AskCopilotButton } from '@/components/copilot/ask-copilot-button'
+import { AskAdviserButton } from '@/components/adviser/ask-adviser-button'
 
 const schedule = [
   { time: '09:25', name: 'Sarah Williams', id: 'sarah-williams', purpose: 'Mid-year check-in', soon: true },
@@ -34,7 +34,7 @@ export function TodaySchedule() {
                   <span className="rounded bg-warning-soft px-1.5 py-0.5 text-[11px] font-medium text-accent-foreground">
                     In 25 minutes
                   </span>
-                  <AskCopilotButton prompt="Prepare me for Sarah's meeting">Prepare Client Brief</AskCopilotButton>
+                  <AskAdviserButton prompt="Prepare me for Sarah's meeting">Prepare Client Brief</AskAdviserButton>
                 </div>
               )}
             </div>

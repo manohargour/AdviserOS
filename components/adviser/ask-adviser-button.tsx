@@ -1,9 +1,9 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { useCopilot } from './copilot-provider'
+import { useAdviser } from './adviser-provider'
 
-export function AskCopilotButton({
+export function AskAdviserButton({
   prompt,
   children,
   variant = 'outline',
@@ -16,7 +16,7 @@ export function AskCopilotButton({
   size?: 'sm' | 'default'
   className?: string
 }) {
-  const { send, isWorking } = useCopilot()
+  const { send, isWorking } = useAdviser()
   return (
     <Button variant={variant} size={size} className={className} disabled={isWorking} onClick={() => send(prompt)}>
       {children}

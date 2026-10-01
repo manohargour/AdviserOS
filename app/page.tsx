@@ -1,6 +1,6 @@
 import { PageContainer } from '@/components/shell/page-header'
 import { StatCards } from '@/components/home/stat-cards'
-import { CopilotSuggestions } from '@/components/home/copilot-suggestions'
+import { AdviserSuggestions } from '@/components/home/adviser-suggestions'
 import { TodaySchedule } from '@/components/home/today-schedule'
 import { ProductConcept } from '@/components/home/product-concept'
 import { ADVISER, TODAY_LABEL } from '@/lib/data'
@@ -18,7 +18,7 @@ export default function HomePage() {
       <StatCards />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <CopilotSuggestions />
+          <AdviserSuggestions />
         </div>
         <TodaySchedule />
       </div>

@@ -1,7 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Newsreader } from 'next/font/google'
-import { CopilotProvider } from '@/components/copilot/copilot-provider'
+import { AdviserProvider } from '@/components/adviser/adviser-provider'
 import { AppShell } from '@/components/shell/app-shell'
 import './globals.css'
 
@@ -39,9 +39,9 @@ export default function RootLayout({
   return (
     <html lang="en-GB" className={`${geist.variable} ${newsreader.variable}`}>
       <body className="font-sans antialiased">
-        <CopilotProvider>
+        <AdviserProvider>
           <AppShell>{children}</AppShell>
-        </CopilotProvider>
+        </AdviserProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -16,7 +16,7 @@ export type ResponseKind =
   | 'risk-changes'
   | 'fallback'
 
-export type CopilotPlan = {
+export type AdviserPlan = {
   kind: ResponseKind
   clientId?: string
   steps: string[]
@@ -24,7 +24,7 @@ export type CopilotPlan = {
 
 const DEFAULT_CLIENT_ID = 'john-smith'
 
-export function planFor(prompt: string, contextClientId?: string): CopilotPlan {
+export function planFor(prompt: string, contextClientId?: string): AdviserPlan {
   const text = prompt.toLowerCase()
   const mentioned = findClientInText(prompt)
   const client: Client | undefined = mentioned ?? (contextClientId ? getClient(contextClientId) : undefined)

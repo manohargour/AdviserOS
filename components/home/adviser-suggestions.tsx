@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
-import { AskCopilotButton } from '@/components/copilot/ask-copilot-button'
+import { AskAdviserButton } from '@/components/adviser/ask-adviser-button'
 
 const suggestions = [
   {
@@ -35,7 +35,7 @@ const suggestions = [
   },
 ]
 
-export function CopilotSuggestions() {
+export function AdviserSuggestions() {
   return (
     <section aria-labelledby="suggests">
       <h2 id="suggests" className="flex items-center gap-2 text-sm font-semibold">
@@ -59,9 +59,9 @@ export function CopilotSuggestions() {
               />
               {s.detail}
             </p>
-            <AskCopilotButton prompt={s.prompt} variant="default" className="mt-4 self-start">
+            <AskAdviserButton prompt={s.prompt} variant="default" className="mt-4 self-start">
               {s.action}
-            </AskCopilotButton>
+            </AskAdviserButton>
           </li>
         ))}
       </ul>

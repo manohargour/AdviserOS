@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Sparkles } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/components/shell/page-header'
-import { AskCopilotButton } from '@/components/copilot/ask-copilot-button'
+import { AskAdviserButton } from '@/components/adviser/ask-adviser-button'
 import { cn } from '@/lib/utils'
 import { reviewsDue } from '@/lib/data'
 
@@ -20,9 +20,9 @@ export default function ReviewsPage() {
   return (
     <PageContainer>
       <PageHeader title="Reviews" description={`${reviewsDue.length} reviews due in October · ${ready} drafts ready for approval`}>
-        <AskCopilotButton prompt="Prepare all reviews due this week" variant="default" size="default">
+        <AskAdviserButton prompt="Prepare all reviews due this week" variant="default" size="default">
           <Sparkles aria-hidden /> Prepare this week&apos;s reviews
-        </AskCopilotButton>
+        </AskAdviserButton>
       </PageHeader>
       <ul className="divide-y rounded-xl border bg-card">
         {reviewsDue.map((r) => {

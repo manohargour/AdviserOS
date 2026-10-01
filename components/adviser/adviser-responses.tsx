@@ -5,16 +5,16 @@ import { useState } from 'react'
 import { ArrowRight, Check, Database, FileText, Link2, TriangleAlert } from 'lucide-react'
 import { buttonVariants, Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { CopilotPlan } from '@/lib/copilot-engine'
+import type { AdviserPlan } from '@/lib/adviser-engine'
 import { alerts, clients, equityPct, equityValue, gbp, getClient, reviewsDue, type Client } from '@/lib/data'
-import { useCopilot, useReviewProgress } from './copilot-provider'
+import { useAdviser, useReviewProgress } from './adviser-provider'
 
 function Actions({ children }: { children: React.ReactNode }) {
   return <div className="mt-3 flex flex-wrap gap-2">{children}</div>
 }
 
 function ActionLink({ href, children, primary }: { href: string; children: React.ReactNode; primary?: boolean }) {
-  const { setPanelOpen } = useCopilot()
+  const { setPanelOpen } = useAdviser()
   return (
     <Link
       href={href}
@@ -27,7 +27,7 @@ function ActionLink({ href, children, primary }: { href: string; children: React
 }
 
 function ActionPrompt({ prompt, children, primary }: { prompt: string; children: React.ReactNode; primary?: boolean }) {
-  const { send, isWorking } = useCopilot()
+  const { send, isWorking } = useAdviser()
   return (
     <Button size="sm" variant={primary ? 'default' : 'outline'} disabled={isWorking} onClick={() => send(prompt)}>
       {children}
@@ -209,7 +209,7 @@ function EquityExplain({ client }: { client: Client }) {
 }
 
 function Attention({ client }: { client: Client }) {
-  const { confirmed, setConfirmed } = useCopilot()
+  const { confirmed, setConfirmed } = useAdviser()
   return (
     <div>
       <Heading>
@@ -460,7 +460,7 @@ function Fallback({ client }: { client?: Client }) {
   )
 }
 
-export function CopilotResponse({ plan }: { plan: CopilotPlan }) {
+export function AdviserResponse({ plan }: { plan: AdviserPlan }) {
   const client = plan.clientId ? getClient(plan.clientId) : undefined
   switch (plan.kind) {
     case 'review-prepared':

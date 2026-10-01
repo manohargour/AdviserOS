@@ -5,13 +5,13 @@ import { ArrowUp, Check, Clock, Loader2, RotateCcw, Sparkles, X } from 'lucide-r
 import { Button } from '@/components/ui/button'
 import { LogoMark } from '@/components/brand/logo-mark'
 import { cn } from '@/lib/utils'
-import { suggestedPromptsFor } from '@/lib/copilot-engine'
+import { suggestedPromptsFor } from '@/lib/adviser-engine'
 import { getClient, type Client } from '@/lib/data'
-import { useCopilot, type CopilotMessage } from './copilot-provider'
-import { CopilotResponse } from './copilot-responses'
+import { useAdviser, type AdviserMessage } from './adviser-provider'
+import { AdviserResponse } from './adviser-responses'
 
 function ProactiveCard({ client }: { client?: Client }) {
-  const { send, dismissed, dismiss, isWorking } = useCopilot()
+  const { send, dismissed, dismiss, isWorking } = useAdviser()
 
   let card: { id: string; eyebrow: string; title: string; body?: React.ReactNode; action: string; prompt: string } | null =
     null
@@ -99,7 +99,7 @@ function ProactiveCard({ client }: { client?: Client }) {
   )
 }
 
-function Message({ message }: { message: CopilotMessage }) {
+function Message({ message }: { message: AdviserMessage }) {
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
@@ -136,7 +136,7 @@ function Message({ message }: { message: CopilotMessage }) {
         )}
         {done && (
           <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
-            <CopilotResponse plan={plan} />
+            <AdviserResponse plan={plan} />
           </div>
         )}
       </div>
@@ -144,8 +144,8 @@ function Message({ message }: { message: CopilotMessage }) {
   )
 }
 
-export function CopilotPanel() {
-  const { messages, send, clear, isWorking, contextClient, panelOpen, setPanelOpen } = useCopilot()
+export function AdviserPanel() {
+  const { messages, send, clear, isWorking, contextClient, panelOpen, setPanelOpen } = useAdviser()
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const prompts = suggestedPromptsFor(contextClient)
@@ -268,11 +268,11 @@ export function CopilotPanel() {
             }}
             className="flex items-end gap-2 rounded-xl border bg-background p-1.5 focus-within:ring-2 focus-within:ring-ring/30"
           >
-            <label htmlFor="copilot-input" className="sr-only">
+            <label htmlFor="adviser-input" className="sr-only">
               Message AdviserOS
             </label>
             <textarea
-              id="copilot-input"
+              id="adviser-input"
               rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}

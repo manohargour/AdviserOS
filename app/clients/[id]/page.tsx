@@ -5,7 +5,7 @@ import { ChevronLeft } from 'lucide-react'
 import { PageContainer } from '@/components/shell/page-header'
 import { StatusBadge } from '@/components/clients/status-badge'
 import { ClientTabs } from '@/components/clients/client-tabs'
-import { AskCopilotButton } from '@/components/copilot/ask-copilot-button'
+import { AskAdviserButton } from '@/components/adviser/ask-adviser-button'
 import { clients, gbp, getClient } from '@/lib/data'
 
 export function generateStaticParams() {
@@ -46,15 +46,15 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <AskCopilotButton prompt={`Prepare ${client.firstName}'s annual review`} variant="default" size="default">
+            <AskAdviserButton prompt={`Prepare ${client.firstName}'s annual review`} variant="default" size="default">
               Prepare Review
-            </AskCopilotButton>
-            <AskCopilotButton prompt={`Prepare ${client.firstName}'s client brief`} size="default">
+            </AskAdviserButton>
+            <AskAdviserButton prompt={`Prepare ${client.firstName}'s client brief`} size="default">
               Generate Client Brief
-            </AskCopilotButton>
-            <AskCopilotButton prompt={`Draft ${client.firstName}'s review letter`} size="default">
+            </AskAdviserButton>
+            <AskAdviserButton prompt={`Draft ${client.firstName}'s review letter`} size="default">
               Draft Letter
-            </AskCopilotButton>
+            </AskAdviserButton>
           </div>
         </div>
       </div>

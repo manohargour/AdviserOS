@@ -3,14 +3,14 @@
 import { useState } from 'react'
 import { Menu, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { CopilotPanel } from '@/components/copilot/copilot-panel'
-import { useCopilot } from '@/components/copilot/copilot-provider'
+import { AdviserPanel } from '@/components/adviser/adviser-panel'
+import { useAdviser } from '@/components/adviser/adviser-provider'
 import { AppSidebar } from './app-sidebar'
 import { CommandBar } from './command-bar'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [navOpen, setNavOpen] = useState(false)
-  const { setPanelOpen } = useCopilot()
+  const { setPanelOpen } = useAdviser()
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
-      <CopilotPanel />
+      <AdviserPanel />
     </div>
   )
 }

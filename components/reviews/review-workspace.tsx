@@ -3,14 +3,14 @@
 import { useState } from 'react'
 import { ArrowRight, Check, CircleCheck, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useCopilot, useReviewProgress } from '@/components/copilot/copilot-provider'
+import { useAdviser, useReviewProgress } from '@/components/adviser/adviser-provider'
 import { AllocationBar } from '@/components/clients/allocation-bar'
 import { cn } from '@/lib/utils'
 import { allocation, gbp, getClient } from '@/lib/data'
 
 export function ReviewWorkspace({ clientId }: { clientId: string }) {
   const client = getClient(clientId)!
-  const { confirmed, setConfirmed, send, isWorking } = useCopilot()
+  const { confirmed, setConfirmed, send, isWorking } = useAdviser()
   const { readiness, remaining } = useReviewProgress(client)
   const [approved, setApproved] = useState(false)
 

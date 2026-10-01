@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CornerDownLeft, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useCopilot } from '@/components/copilot/copilot-provider'
+import { useAdviser } from '@/components/adviser/adviser-provider'
 
 const EXAMPLES = [
   'Prepare all reviews due this week',
@@ -14,7 +14,7 @@ const EXAMPLES = [
 ]
 
 export function CommandBar() {
-  const { send, isWorking } = useCopilot()
+  const { send, isWorking } = useAdviser()
   const [value, setValue] = useState('')
   const [open, setOpen] = useState(false)
   const [highlight, setHighlight] = useState(-1)
