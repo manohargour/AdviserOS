@@ -10,7 +10,7 @@ const stats = [
 
 export function StatCards() {
   return (
-    <section aria-label="Today at a glance" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <section aria-label="Today at a glance" data-tour="stats" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {stats.map((stat) => (
         <Link
           key={stat.label}

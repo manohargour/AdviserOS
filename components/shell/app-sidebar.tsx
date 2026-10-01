@@ -97,6 +97,7 @@ function NavLink({
     <Link
       href={href}
       onClick={onNavigate}
+      data-tour={`nav-${label.toLowerCase().replace(/\s+/g, '-')}`}
       aria-current={active ? 'page' : undefined}
       className={cn(
         'flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors',

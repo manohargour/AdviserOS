@@ -45,6 +45,7 @@ export function CommandBar() {
   return (
     <div className="relative w-full max-w-2xl">
       <form
+        data-tour="command-bar"
         onSubmit={(e) => {
           e.preventDefault()
           run(highlight >= 0 && matches[highlight] ? matches[highlight] : value)

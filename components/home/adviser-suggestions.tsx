@@ -37,7 +37,7 @@ const suggestions = [
 
 export function AdviserSuggestions() {
   return (
-    <section aria-labelledby="suggests">
+    <section aria-labelledby="suggests" data-tour="suggestions">
       <h2 id="suggests" className="flex items-center gap-2 text-sm font-semibold">
         <Sparkles aria-hidden className="size-4 text-brass" />
         AdviserOS suggests

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Menu, Sparkles } from 'lucide-react'
+import { Compass, Menu, Sparkles } from 'lucide-react'
+import { TourProvider, useTour } from '@/components/tour/product-tour'
 import { Button } from '@/components/ui/button'
 import { AdviserPanel } from '@/components/adviser/adviser-panel'
 import { useAdviser } from '@/components/adviser/adviser-provider'
@@ -10,11 +11,21 @@ import { AppSidebar } from './app-sidebar'
 import { CommandBar } from './command-bar'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [navOpen, setNavOpen] = useState(false)
-  const { setPanelOpen } = useAdviser()
   const pathname = usePathname()
 
   if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) return <>{children}</>
+
+  return (
+    <TourProvider>
+      <Shell>{children}</Shell>
+    </TourProvider>
+  )
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  const [navOpen, setNavOpen] = useState(false)
+  const { setPanelOpen } = useAdviser()
+  const { start } = useTour()
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -31,7 +42,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Menu />
           </Button>
           <CommandBar />
-          <Button variant="outline" className="ml-auto xl:hidden" onClick={() => setPanelOpen(true)}>
+          <Button variant="ghost" className="ml-auto" onClick={start} data-tour="tour-button">
+            <Compass aria-hidden />
+            <span className="hidden sm:inline">Tour</span>
+          </Button>
+          <Button variant="outline" className="xl:hidden" onClick={() => setPanelOpen(true)}>
             <Sparkles aria-hidden className="text-brass" />
             <span className="hidden sm:inline">AdviserOS</span>
           </Button>

@@ -200,6 +200,7 @@ export function AdviserPanel() {
       />
       <aside
         aria-label="AdviserOS"
+        data-tour="adviser-panel"
         className={cn(
           'fixed inset-y-0 right-0 z-50 flex w-full max-w-[400px] flex-col border-l bg-card transition-transform xl:static xl:z-auto xl:w-[380px] xl:max-w-none xl:translate-x-0',
           panelOpen ? 'translate-x-0' : 'translate-x-full',
