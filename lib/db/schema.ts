@@ -140,6 +140,19 @@ export const reports = pgTable('reports', {
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
 
+export const reportAcknowledgements = pgTable('report_acknowledgements', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  clientSlug: text('clientSlug').notNull(),
+  reportId: integer('reportId'),
+  token: text('token').notNull().unique(),
+  sentTo: text('sentTo').notNull(),
+  acknowledgedAt: timestamp('acknowledgedAt'),
+  acknowledgedName: text('acknowledgedName'),
+  comment: text('comment'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+})
+
 export const reportSends = pgTable('report_sends', {
   id: serial('id').primaryKey(),
   reportId: integer('reportId').notNull(),

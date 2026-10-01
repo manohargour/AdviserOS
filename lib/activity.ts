@@ -21,6 +21,7 @@ export type ActivityAction =
   | 'report.reopen'
   | 'report.sent'
   | 'report.deleted'
+  | 'report.acknowledged'
 
 export type ActivityEntry = typeof activityLog.$inferSelect
 

@@ -1,10 +1,10 @@
 'use client'
 
 import { useRef, useState, useTransition } from 'react'
-import Link from 'next/link'
-import { Loader2, Mail, Send, X } from 'lucide-react'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { emailReviewReport } from '@/app/actions/reports'
+import { useRouter } from 'next/navigation'
+import { Loader2, Mail, Send, ShieldCheck, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { approveAndEmailReviewReport, emailReviewReport } from '@/app/actions/reports'
 
 const inputCls =
   'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring'
@@ -22,6 +22,7 @@ export function EmailReportButton({ clientSlug, approved, defaultTo, defaultSubj
   const [form, setForm] = useState({ to: defaultTo, subject: defaultSubject, message: defaultMessage })
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null)
   const [pending, startTransition] = useTransition()
+  const router = useRouter()
 
   function open() {
     setStatus(null)
@@ -35,8 +36,9 @@ export function EmailReportButton({ clientSlug, approved, defaultTo, defaultSubj
   function submit(e: React.FormEvent) {
     e.preventDefault()
     startTransition(async () => {
-      const res = await emailReviewReport(clientSlug, form)
+      const res = approved ? await emailReviewReport(clientSlug, form) : await approveAndEmailReviewReport(clientSlug, form)
       setStatus(res.ok ? { ok: true, text: res.message ?? 'Sent' } : { ok: false, text: res.error })
+      if (res.ok) router.refresh()
     })
   }
 
@@ -67,8 +69,14 @@ export function EmailReportButton({ clientSlug, approved, defaultTo, defaultSubj
           </button>
         </div>
 
-        {approved ? (
+        {
           <form onSubmit={submit} className="space-y-4 px-5 py-4">
+            {!approved && !status?.ok && (
+              <div className="flex gap-2.5 rounded-lg border border-amber-300/70 bg-amber-50 p-3 text-sm text-amber-900">
+                <ShieldCheck aria-hidden className="mt-0.5 size-4 shrink-0" />
+                <p>This review isn&apos;t approved yet. Sending will approve it first, so the compliance record shows approval before delivery.</p>
+              </div>
+            )}
             <div className="space-y-1.5">
               <label htmlFor="er-to" className="text-sm font-medium">To</label>
               <input
@@ -90,6 +98,13 @@ export function EmailReportButton({ clientSlug, approved, defaultTo, defaultSubj
               <textarea id="er-message" rows={5} className={inputCls} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
             </div>
 
+            {!approved && !status?.ok && (
+              <label className="flex items-start gap-2.5 text-sm leading-relaxed">
+                <input type="checkbox" required className="mt-1 size-4 accent-primary" />
+                <span>I&apos;ve checked this report and approve it for sending to the client.</span>
+              </label>
+            )}
+
             {status && (
               <p role="status" className={status.ok ? 'text-sm text-emerald-700' : 'text-sm text-destructive'}>
                 {status.text}
@@ -102,25 +117,11 @@ export function EmailReportButton({ clientSlug, approved, defaultTo, defaultSubj
               </Button>
               <Button type="submit" size="sm" disabled={pending}>
                 {pending ? <Loader2 aria-hidden className="animate-spin" /> : <Send aria-hidden />}
-                {pending ? 'Sending…' : 'Send email'}
+                {pending ? 'Sending…' : approved || status?.ok ? 'Send email' : 'Approve & send'}
               </Button>
             </div>
           </form>
-        ) : (
-          <div className="space-y-4 px-5 py-4">
-            <p className="text-sm text-muted-foreground">
-              This review hasn&apos;t been approved yet. Reports can only be sent to clients after approval, so there&apos;s a clear compliance record.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" size="sm" onClick={close}>
-                Cancel
-              </Button>
-              <Link href={`/reviews/${clientSlug}`} className={buttonVariants({ size: 'sm' })}>
-                Go to review to approve
-              </Link>
-            </div>
-          </div>
-        )}
+        }
       </dialog>
     </>
   )

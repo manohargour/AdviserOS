@@ -1,12 +1,14 @@
 'use server'
 
-import { and, desc, eq, inArray } from 'drizzle-orm'
+import { randomBytes } from 'node:crypto'
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { reportSends, reports } from '@/lib/db/schema'
+import { reportAcknowledgements, reportSends, reports } from '@/lib/db/schema'
+import { approveReview } from '@/app/actions/workspace'
 import { logActivity } from '@/lib/activity'
 import { getClientBySlug, getReviewForClient } from '@/lib/workspace'
 import { getReport, reportFileName } from '@/lib/reports'
@@ -158,6 +160,44 @@ export async function emailReviewReport(
   return result
 }
 
+export async function approveAndEmailReviewReport(
+  clientSlug: string,
+  input: { to: string; subject: string; message: string },
+): Promise<Result> {
+  const user = await getSessionUser()
+  const client = typeof clientSlug === 'string' ? await getClientBySlug(user.id, clientSlug) : null
+  if (!client) return { ok: false, error: 'Client not found' }
+  const to = clean(input.to, 254)
+  if (!to || !EMAIL_RE.test(to)) return { ok: false, error: 'Enter a valid client email' }
+  const review = await getReviewForClient(user.id, client.id)
+  if (review?.status !== 'Approved') await approveReview(client.id, review?.confirmedItems ?? [])
+  return emailReviewReport(client.id, input)
+}
+
+async function getAcknowledgeUrl(userId: string, reportId: number, clientSlug: string, to: string) {
+  const [existing] = await db
+    .select({ token: reportAcknowledgements.token })
+    .from(reportAcknowledgements)
+    .where(
+      and(
+        eq(reportAcknowledgements.userId, userId),
+        eq(reportAcknowledgements.reportId, reportId),
+        eq(reportAcknowledgements.sentTo, to),
+        isNull(reportAcknowledgements.acknowledgedAt),
+      ),
+    )
+    .limit(1)
+  let token = existing?.token
+  if (!token) {
+    token = randomBytes(24).toString('base64url')
+    await db.insert(reportAcknowledgements).values({ userId, reportId, clientSlug, token, sentTo: to })
+  }
+  const h = await headers()
+  const host = h.get('x-forwarded-host') ?? h.get('host')
+  const proto = h.get('x-forwarded-proto') ?? (host?.startsWith('localhost') ? 'http' : 'https')
+  return `${proto}://${host}/ack/${token}`
+}
+
 export async function sendReport(id: number, input: { to: string; subject: string; message: string }): Promise<Result> {
   const user = await getSessionUser()
   const report = await getReport(user.id, id)
@@ -181,7 +221,9 @@ export async function sendReport(id: number, input: { to: string; subject: strin
     issuedOn: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
   })
 
+  const acknowledgeUrl = await getAcknowledgeUrl(user.id, report.id, report.clientSlug, to)
   const result = await sendReportEmail({
+    acknowledgeUrl,
     to,
     replyTo: user.email,
     subject,

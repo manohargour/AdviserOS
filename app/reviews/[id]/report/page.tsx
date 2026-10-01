@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { ChevronLeft } from 'lucide-react'
+import { and, desc, eq } from 'drizzle-orm'
+import { CheckCircle2, ChevronLeft, Clock } from 'lucide-react'
+import { db } from '@/lib/db'
+import { reportAcknowledgements } from '@/lib/db/schema'
 import { PageContainer } from '@/components/shell/page-header'
 import { ReviewReport } from '@/components/report/review-report'
 import { PrintButton } from '@/components/report/print-button'
@@ -14,7 +17,16 @@ export const metadata: Metadata = { title: 'Annual review report' }
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const user = await requireUser()
-  const [client, review] = await Promise.all([getClientBySlug(user.id, id), getReviewForClient(user.id, id)])
+  const [client, review, [ack]] = await Promise.all([
+    getClientBySlug(user.id, id),
+    getReviewForClient(user.id, id),
+    db
+      .select({ acknowledgedAt: reportAcknowledgements.acknowledgedAt, acknowledgedName: reportAcknowledgements.acknowledgedName })
+      .from(reportAcknowledgements)
+      .where(and(eq(reportAcknowledgements.userId, user.id), eq(reportAcknowledgements.clientSlug, id)))
+      .orderBy(desc(reportAcknowledgements.acknowledgedAt), desc(reportAcknowledgements.createdAt))
+      .limit(1),
+  ])
   if (!client) notFound()
 
   return (
@@ -27,6 +39,18 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <ChevronLeft aria-hidden className="size-3.5" /> Back to review
         </Link>
         <div className="flex items-center gap-2">
+          {ack &&
+            (ack.acknowledgedAt ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                <CheckCircle2 aria-hidden className="size-3.5" />
+                Client signed off {ack.acknowledgedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                <Clock aria-hidden className="size-3.5" />
+                Awaiting client sign-off
+              </span>
+            ))}
           <EmailReportButton
             clientSlug={client.id}
             approved={review?.status === 'Approved'}

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
 
-const PUBLIC_PATHS = ['/sign-in', '/sign-up']
+const PUBLIC_PATHS = ['/sign-in', '/sign-up', '/ack/']
 
 // Optimistic redirect only — every page and action still validates the session on the server.
 export function proxy(request: NextRequest) {
