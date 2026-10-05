@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Briefcase, Loader2, User } from 'lucide-react'
+import { Briefcase, Loader2, User, UserRoundCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LogoMark } from '@/components/brand/logo-mark'
 import { authClient } from '@/lib/auth-client'
@@ -12,14 +12,20 @@ import { cn } from '@/lib/utils'
 const inputClass =
   'w-full rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30'
 
-type Role = 'personal' | 'adviser'
+type Role = 'personal' | 'client' | 'adviser'
+type Audience = 'personal' | 'adviser'
 
-const ROLES: { value: Role; label: string; hint: string; icon: typeof User }[] = [
-  { value: 'personal', label: 'Personal', hint: 'Manage my own wealth', icon: User },
+const AUDIENCES: { value: Audience; label: string; hint: string; icon: typeof User }[] = [
+  { value: 'personal', label: 'Personal', hint: 'My own wealth', icon: User },
   { value: 'adviser', label: 'Adviser', hint: 'Manage client reviews', icon: Briefcase },
 ]
 
-const COPY = {
+const PERSONAL_TYPES: { value: Exclude<Role, 'adviser'>; label: string; hint: string; icon: typeof User }[] = [
+  { value: 'personal', label: 'On my own', hint: 'Plan and invest independently', icon: User },
+  { value: 'client', label: 'With an adviser', hint: 'Get my adviser’s reports here', icon: UserRoundCheck },
+]
+
+const COPY: Record<Role, { signUpTitle: string; signUpBody: string; emailLabel: string }> = {
   adviser: {
     signUpTitle: 'Create your workspace',
     signUpBody: 'Set up your adviser account. We’ll load a sample client book so you can explore.',
@@ -27,18 +33,63 @@ const COPY = {
   },
   personal: {
     signUpTitle: 'Create your account',
-    signUpBody: 'See your whole financial life in one place, with an AI copilot and your adviser’s reports.',
+    signUpBody: 'See your whole financial life in one place, with an AI copilot to help you plan.',
     emailLabel: 'Email',
+  },
+  client: {
+    signUpTitle: 'Join your adviser',
+    signUpBody: 'Keep your adviser’s reviews alongside your own picture, and sign off reports in one place.',
+    emailLabel: 'Email your adviser uses',
   },
 }
 
-export function AuthForm({ mode, initialRole = 'adviser' }: { mode: 'sign-in' | 'sign-up'; initialRole?: Role }) {
+function RadioCard({
+  selected,
+  onSelect,
+  label,
+  hint,
+  icon: Icon,
+}: {
+  selected: boolean
+  onSelect: () => void
+  label: string
+  hint: string
+  icon: typeof User
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={cn(
+        'flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring',
+        selected ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:bg-muted',
+      )}
+    >
+      <Icon aria-hidden className={cn('size-4', selected ? 'text-primary' : 'text-muted-foreground')} />
+      <span className="text-sm font-medium">{label}</span>
+      <span className="text-xs text-muted-foreground">{hint}</span>
+    </button>
+  )
+}
+
+export function AuthForm({
+  mode,
+  initialRole = 'adviser',
+  reportLink,
+}: {
+  mode: 'sign-in' | 'sign-up'
+  initialRole?: Role
+  reportLink?: string
+}) {
   const router = useRouter()
   const [role, setRole] = useState<Role>(initialRole)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const isSignUp = mode === 'sign-up'
-  const copy = COPY[role]
+  const audience: Audience = role === 'adviser' ? 'adviser' : 'personal'
+  const copy = COPY[isSignUp ? role : audience]
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -65,7 +116,11 @@ export function AuthForm({ mode, initialRole = 'adviser' }: { mode: 'sign-in' | 
     }
     // The account's stored role decides the destination, not the toggle.
     const accountRole = (result.data?.user as { role?: string } | undefined)?.role
-    router.push(accountRole === 'personal' ? '/me' : '/')
+    if (accountRole === 'client') {
+      router.push(isSignUp || reportLink ? `/me/adviser${reportLink ? `?link=${reportLink}` : ''}` : '/me')
+    } else {
+      router.push(accountRole === 'personal' ? '/me' : '/')
+    }
     router.refresh()
   }
 
@@ -89,28 +144,41 @@ export function AuthForm({ mode, initialRole = 'adviser' }: { mode: 'sign-in' | 
         <fieldset className="mt-6">
           <legend className="mb-2 text-sm font-medium">{isSignUp ? 'I’m signing up as' : 'I’m signing in as'}</legend>
           <div role="radiogroup" className="grid grid-cols-2 gap-2">
-            {ROLES.map(({ value, label, hint, icon: Icon }) => {
-              const selected = role === value
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setRole(value)}
-                  className={cn(
-                    'flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring',
-                    selected ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:bg-muted',
-                  )}
-                >
-                  <Icon aria-hidden className={cn('size-4', selected ? 'text-primary' : 'text-muted-foreground')} />
-                  <span className="text-sm font-medium">{label}</span>
-                  <span className="text-xs text-muted-foreground">{hint}</span>
-                </button>
-              )
-            })}
+            {AUDIENCES.map((a) => (
+              <RadioCard
+                key={a.value}
+                selected={audience === a.value}
+                onSelect={() => setRole(a.value === 'adviser' ? 'adviser' : role === 'client' ? 'client' : 'personal')}
+                label={a.label}
+                hint={a.hint}
+                icon={a.icon}
+              />
+            ))}
           </div>
         </fieldset>
+
+        {isSignUp && audience === 'personal' && (
+          <fieldset className="mt-4">
+            <legend className="mb-2 text-sm font-medium">How do you manage your money?</legend>
+            <div role="radiogroup" className="grid grid-cols-2 gap-2">
+              {PERSONAL_TYPES.map((t) => (
+                <RadioCard
+                  key={t.value}
+                  selected={role === t.value}
+                  onSelect={() => setRole(t.value)}
+                  label={t.label}
+                  hint={t.hint}
+                  icon={t.icon}
+                />
+              ))}
+            </div>
+            {role === 'client' && reportLink && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                The report your adviser sent will be added to your account.
+              </p>
+            )}
+          </fieldset>
+        )}
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           {isSignUp && (
@@ -155,7 +223,7 @@ export function AuthForm({ mode, initialRole = 'adviser' }: { mode: 'sign-in' | 
         <p className="mt-6 text-sm text-muted-foreground">
           {isSignUp ? 'Already have an account? ' : 'New to AdviserOS? '}
           <Link
-            href={`${isSignUp ? '/sign-in' : '/sign-up'}?as=${role}`}
+            href={`${isSignUp ? '/sign-in' : '/sign-up'}?as=${role}${reportLink ? `&link=${reportLink}` : ''}`}
             className="font-medium text-foreground underline underline-offset-4"
           >
             {isSignUp ? 'Sign in' : 'Create an account'}

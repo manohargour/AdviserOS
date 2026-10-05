@@ -7,7 +7,7 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull().default(false),
   image: text('image'),
-  role: text('role').$type<'adviser' | 'personal'>().notNull().default('adviser'),
+  role: text('role').$type<'adviser' | 'personal' | 'client'>().notNull().default('adviser'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })

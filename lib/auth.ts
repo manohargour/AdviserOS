@@ -42,7 +42,12 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user) => ({
-          data: { ...user, role: (user as { role?: unknown }).role === 'personal' ? 'personal' : 'adviser' },
+          data: {
+            ...user,
+            role: ['personal', 'client'].includes(String((user as { role?: unknown }).role))
+              ? String((user as { role?: unknown }).role)
+              : 'adviser',
+          },
         }),
       },
       update: {

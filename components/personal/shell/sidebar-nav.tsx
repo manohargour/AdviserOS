@@ -26,7 +26,7 @@ export const navItems = [
   { href: '/me/opportunities', label: 'Opportunities', icon: Compass },
   { href: '/me/insights', label: 'Insights', icon: Lightbulb, badge: 3 },
   { href: '/me/accounts', label: 'Accounts', icon: Landmark },
-  { href: '/me/adviser', label: 'My adviser', icon: UserRoundCheck },
+  { href: '/me/adviser', label: 'My adviser', icon: UserRoundCheck, clientOnly: true },
 ]
 
 function initialsOf(name: string) {
@@ -52,7 +52,15 @@ export function Logo() {
   )
 }
 
-export function SidebarNav({ onNavigate, user }: { onNavigate?: () => void; user: { name: string; email: string } }) {
+export function SidebarNav({
+  onNavigate,
+  user,
+}: {
+  onNavigate?: () => void
+  user: { name: string; email: string; role: 'personal' | 'client' }
+}) {
+  const isClient = user.role === 'client'
+  const items = navItems.filter((item) => !item.clientOnly || isClient)
   const pathname = usePathname()
   const router = useRouter()
   const [signingOut, setSigningOut] = useState(false)
@@ -73,7 +81,7 @@ export function SidebarNav({ onNavigate, user }: { onNavigate?: () => void; user
 
       <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-2">
         <ul className="flex flex-col gap-0.5">
-          {navItems.map(({ href, label, icon: Icon, badge }) => {
+          {items.map(({ href, label, icon: Icon, badge }) => {
             const active = href === '/me' ? pathname === '/me' : pathname.startsWith(href)
             return (
               <li key={href}>
@@ -104,6 +112,16 @@ export function SidebarNav({ onNavigate, user }: { onNavigate?: () => void; user
       </nav>
 
       <div className="flex flex-col gap-2 border-t border-sidebar-border p-3">
+        {!isClient && (
+          <Link
+            href="/me/adviser"
+            onClick={onNavigate}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
+          >
+            <UserRoundCheck className="size-3.5" aria-hidden />
+            Work with an adviser? Connect
+          </Link>
+        )}
         <Link
           href="/me/accounts"
           onClick={onNavigate}
@@ -126,7 +144,9 @@ export function SidebarNav({ onNavigate, user }: { onNavigate?: () => void; user
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[13px] font-medium">{user.name}</span>
-            <span className="block truncate text-[11px] text-muted-foreground">{user.email}</span>
+            <span className="block truncate text-[11px] text-muted-foreground">
+              {isClient ? 'Adviser client' : 'Independent'} · {user.email}
+            </span>
           </span>
           <button
             type="button"

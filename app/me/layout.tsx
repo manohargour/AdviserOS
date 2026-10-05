@@ -11,7 +11,7 @@ export default async function PersonalLayout({ children }: { children: React.Rea
   const user = await requirePersonal()
   return (
     <div className="personal">
-      <AppShell user={{ name: user.name, email: user.email }}>{children}</AppShell>
+      <AppShell user={{ name: user.name, email: user.email, role: user.role }}>{children}</AppShell>
     </div>
   )
 }

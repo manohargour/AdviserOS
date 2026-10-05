@@ -18,7 +18,7 @@ export function useAiPanel() {
   return ctx
 }
 
-export type ShellUser = { name: string; email: string }
+export type ShellUser = { name: string; email: string; role: 'personal' | 'client' }
 
 export function AppShell({ children, user }: { children: React.ReactNode; user: ShellUser }) {
   const pathname = usePathname()

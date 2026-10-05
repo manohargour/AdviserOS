@@ -73,7 +73,7 @@ export default async function AcknowledgePage({ params }: { params: Promise<{ to
         </div>
         <footer className="border-t border-border bg-muted/40 px-6 py-3 text-center text-xs text-muted-foreground">
           Have a personal AdviserOS account?{' '}
-          <Link href={`/me/adviser?link=${token}`} className="font-medium text-foreground underline underline-offset-4">
+          <Link href={`/sign-up?as=client&link=${token}`} className="font-medium text-foreground underline underline-offset-4">
             Keep this report in it
           </Link>
         </footer>

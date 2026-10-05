@@ -3,8 +3,8 @@
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
-import { reportAcknowledgements } from '@/lib/db/schema'
-import { getSessionUser } from '@/lib/roles'
+import { reportAcknowledgements, user as users } from '@/lib/db/schema'
+import { getSessionUser, isPersonalRole } from '@/lib/roles'
 
 export type LinkState = { ok: boolean; message: string } | null
 
@@ -18,7 +18,7 @@ function extractToken(input: string) {
 
 export async function linkAdviserReport(_prev: LinkState, formData: FormData): Promise<LinkState> {
   const user = await getSessionUser()
-  if (!user || user.role !== 'personal') return { ok: false, message: 'Sign in to your personal account first.' }
+  if (!user || !isPersonalRole(user.role)) return { ok: false, message: 'Sign in to your personal account first.' }
 
   const token = extractToken(String(formData.get('link') ?? ''))
   if (!token) return { ok: false, message: 'That doesn’t look like a report link. Paste the link from your adviser’s email.' }
@@ -41,6 +41,11 @@ export async function linkAdviserReport(_prev: LinkState, formData: FormData): P
 
   if (updated.length === 0) return { ok: false, message: 'This report is already linked to another account.' }
 
-  revalidatePath('/me/adviser')
+  // An independent user who connects an adviser's report becomes that adviser's client.
+  if (user.role === 'personal') {
+    await db.update(users).set({ role: 'client' }).where(eq(users.id, user.id))
+  }
+
+  revalidatePath('/me', 'layout')
   return { ok: true, message: 'Report added. Your adviser’s reports will appear here.' }
 }
