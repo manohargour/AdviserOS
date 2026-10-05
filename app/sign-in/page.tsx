@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { getSessionUser } from '@/lib/roles'
 import { AuthForm } from '@/components/auth/auth-form'
 
 export const metadata: Metadata = { title: 'Sign in' }
 
-export default async function SignInPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (session?.user) redirect('/')
-  return <AuthForm mode="sign-in" />
+export default async function SignInPage({ searchParams }: { searchParams: Promise<{ as?: string }> }) {
+  const user = await getSessionUser()
+  if (user) redirect(user.role === 'personal' ? '/me' : '/')
+  const { as } = await searchParams
+  return <AuthForm mode="sign-in" initialRole={as === 'personal' ? 'personal' : 'adviser'} />
 }

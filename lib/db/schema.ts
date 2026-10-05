@@ -7,6 +7,7 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('emailVerified').notNull().default(false),
   image: text('image'),
+  role: text('role').$type<'adviser' | 'personal'>().notNull().default('adviser'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -150,6 +151,7 @@ export const reportAcknowledgements = pgTable('report_acknowledgements', {
   acknowledgedAt: timestamp('acknowledgedAt'),
   acknowledgedName: text('acknowledgedName'),
   comment: text('comment'),
+  personalUserId: text('personalUserId'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
 

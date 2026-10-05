@@ -4,8 +4,10 @@ import { AdviserSuggestions } from '@/components/home/adviser-suggestions'
 import { TodaySchedule } from '@/components/home/today-schedule'
 import { ProductConcept } from '@/components/home/product-concept'
 import { ADVISER, TODAY_LABEL } from '@/lib/data'
+import { requireAdviser } from '@/lib/roles'
 
-export default function HomePage() {
+export default async function HomePage() {
+  await requireAdviser()
   return (
     <PageContainer>
       <section aria-labelledby="greeting">

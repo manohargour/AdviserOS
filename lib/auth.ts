@@ -33,6 +33,27 @@ export const auth = betterAuth({
         ]
       : []),
   ],
+  user: {
+    additionalFields: {
+      role: { type: 'string', required: false, defaultValue: 'adviser', input: true },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => ({
+          data: { ...user, role: (user as { role?: unknown }).role === 'personal' ? 'personal' : 'adviser' },
+        }),
+      },
+      update: {
+        // Role is chosen once at sign-up; never let a profile update switch it.
+        before: async (data) => {
+          const { role: _role, ...rest } = data as Record<string, unknown>
+          return { data: rest }
+        },
+      },
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,

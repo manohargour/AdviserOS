@@ -13,7 +13,7 @@ import { CommandBar } from './command-bar'
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
-  if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/ack/')) return <>{children}</>
+  if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/ack/') || pathname === '/me' || pathname.startsWith('/me/')) return <>{children}</>
 
   return (
     <TourProvider>

@@ -14,6 +14,7 @@ import {
 export async function requireUser() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/sign-in')
+  if ((session.user as { role?: string }).role === 'personal') redirect('/me')
   await ensureSeeded(session.user.id)
   return session.user
 }
