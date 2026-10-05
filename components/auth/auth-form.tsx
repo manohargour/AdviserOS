@@ -13,16 +13,16 @@ const inputClass =
   'w-full rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30'
 
 type Role = 'personal' | 'client' | 'adviser'
-type Audience = 'personal' | 'adviser'
+type Audience = 'b2b' | 'b2c'
 
 const AUDIENCES: { value: Audience; label: string; hint: string; icon: typeof User }[] = [
-  { value: 'personal', label: 'Personal', hint: 'My own wealth', icon: User },
-  { value: 'adviser', label: 'Adviser', hint: 'Manage client reviews', icon: Briefcase },
+  { value: 'b2b', label: 'Adviser & client', hint: 'Advice firms and the clients they serve', icon: Briefcase },
+  { value: 'b2c', label: 'Individual', hint: 'Manage my own wealth, no adviser', icon: User },
 ]
 
-const PERSONAL_TYPES: { value: Exclude<Role, 'adviser'>; label: string; hint: string; icon: typeof User }[] = [
-  { value: 'personal', label: 'On my own', hint: 'Plan and invest independently', icon: User },
-  { value: 'client', label: 'With an adviser', hint: 'Get my adviser’s reports here', icon: UserRoundCheck },
+const B2B_ROLES: { value: Exclude<Role, 'personal'>; label: string; hint: string; icon: typeof User }[] = [
+  { value: 'adviser', label: 'I’m an adviser', hint: 'Run reviews for my clients', icon: Briefcase },
+  { value: 'client', label: 'I’m a client', hint: 'See and sign off my adviser’s reports', icon: UserRoundCheck },
 ]
 
 const COPY: Record<Role, { signUpTitle: string; signUpBody: string; emailLabel: string }> = {
@@ -88,8 +88,8 @@ export function AuthForm({
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const isSignUp = mode === 'sign-up'
-  const audience: Audience = role === 'adviser' ? 'adviser' : 'personal'
-  const copy = COPY[isSignUp ? role : audience]
+  const audience: Audience = role === 'personal' ? 'b2c' : 'b2b'
+  const copy = COPY[role]
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -148,7 +148,7 @@ export function AuthForm({
               <RadioCard
                 key={a.value}
                 selected={audience === a.value}
-                onSelect={() => setRole(a.value === 'adviser' ? 'adviser' : role === 'client' ? 'client' : 'personal')}
+                onSelect={() => setRole(a.value === 'b2c' ? 'personal' : role === 'client' ? 'client' : 'adviser')}
                 label={a.label}
                 hint={a.hint}
                 icon={a.icon}
@@ -157,11 +157,11 @@ export function AuthForm({
           </div>
         </fieldset>
 
-        {isSignUp && audience === 'personal' && (
+        {audience === 'b2b' && (
           <fieldset className="mt-4">
-            <legend className="mb-2 text-sm font-medium">How do you manage your money?</legend>
+            <legend className="mb-2 text-sm font-medium">Which side are you on?</legend>
             <div role="radiogroup" className="grid grid-cols-2 gap-2">
-              {PERSONAL_TYPES.map((t) => (
+              {B2B_ROLES.map((t) => (
                 <RadioCard
                   key={t.value}
                   selected={role === t.value}
