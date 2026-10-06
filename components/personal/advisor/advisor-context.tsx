@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { goals, netWorth, user } from '@/lib/personal/data'
+import type { Goal, AllocationSlice } from '@/lib/personal/data'
+import type { NetWorth, PersonalProfile } from '@/lib/personal/store'
 import { formatCompactGBP, formatGBP } from '@/lib/personal/format'
 import { Dot, Meter, Panel } from '@/components/personal/wealth/primitives'
 import { statusTone } from '@/components/personal/goals/goal-meta'
@@ -13,12 +14,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-export function AdvisorContext() {
+export function AdvisorContext({
+  netWorth,
+  goals,
+  profile,
+  exposures,
+}: {
+  netWorth: NetWorth
+  goals: Goal[]
+  profile: PersonalProfile
+  exposures: AllocationSlice[]
+}) {
   return (
     <Panel className="overflow-hidden">
       <div className="border-b bg-muted/40 px-5 py-3">
         <p className="text-[12px] font-medium">What the advisor can see</p>
-        <p className="text-[11px] text-muted-foreground">Synced 4 minutes ago · 8 of 9 accounts live</p>
+        <p className="text-[11px] text-muted-foreground">Only the accounts, holdings and goals you have entered</p>
       </div>
 
       <Section title="Net worth">
@@ -38,50 +49,51 @@ export function AdvisorContext() {
         </dl>
       </Section>
 
-      <Section title="Goals">
-        <ul className="flex flex-col gap-3">
-          {goals.map((g) => (
-            <li key={g.id}>
-              <Link href={`/me/goals/${g.id}`} className="block hover:opacity-80">
-                <div className="flex items-center justify-between gap-2 text-[12px]">
-                  <span className="flex items-center gap-1.5 truncate">
-                    <Dot tone={statusTone(g.status)} />
-                    {g.name}
-                  </span>
-                  <span className="num text-muted-foreground">{g.probability}%</span>
-                </div>
-                <Meter value={(g.current / g.target) * 100} tone="ink" className="mt-1.5 h-1" label={`${g.name} funded`} />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </Section>
+      {goals.length > 0 ? (
+        <Section title="Goals">
+          <ul className="flex flex-col gap-3">
+            {goals.map((g) => (
+              <li key={g.id}>
+                <Link href={`/me/goals/${g.id}`} className="block hover:opacity-80">
+                  <div className="flex items-center justify-between gap-2 text-[12px]">
+                    <span className="flex items-center gap-1.5 truncate">
+                      <Dot tone={statusTone(g.status)} />
+                      {g.name}
+                    </span>
+                    <span className="num text-muted-foreground">{g.probability}%</span>
+                  </div>
+                  <Meter value={g.target > 0 ? (g.current / g.target) * 100 : 0} tone="ink" className="mt-1.5 h-1" label={`${g.name} funded`} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      ) : null}
 
       <Section title="Risk profile">
-        <p className="text-[13px] font-medium">{user.riskProfile}</p>
-        <div className="mt-2 flex gap-1" role="img" aria-label={`Risk score ${user.riskScore} of 10`}>
+        <p className="text-[13px] font-medium">{profile.riskProfile}</p>
+        <div className="mt-2 flex gap-1" role="img" aria-label={`Risk score ${profile.riskScore} of 10`}>
           {Array.from({ length: 10 }, (_, i) => (
-            <span key={i} className={i < user.riskScore ? 'h-1.5 flex-1 rounded-full bg-primary' : 'h-1.5 flex-1 rounded-full bg-muted'} />
+            <span key={i} className={i < profile.riskScore ? 'h-1.5 flex-1 rounded-full bg-primary' : 'h-1.5 flex-1 rounded-full bg-muted'} />
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">Current portfolio behaves closer to 7/10 due to tech concentration.</p>
       </Section>
 
-      <Section title="Major exposures">
-        <ul className="flex flex-col gap-2 text-[12px]">
-          {[
-            { label: 'Technology (look-through)', value: '41%', tone: 'warning' as const },
-            { label: 'BP (employer)', value: '28.2%', tone: 'negative' as const },
-            { label: 'Nvidia ecosystem', value: '21.1%', tone: 'negative' as const },
-            { label: 'USD currency', value: '51%', tone: 'warning' as const },
-          ].map((e) => (
-            <li key={e.label} className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5"><Dot tone={e.tone} />{e.label}</span>
-              <span className="num font-medium">{e.value}</span>
-            </li>
-          ))}
-        </ul>
-      </Section>
+      {exposures.length > 0 ? (
+        <Section title="Largest asset classes">
+          <ul className="flex flex-col gap-2 text-[12px]">
+            {exposures.map((e) => (
+              <li key={e.name} className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full" style={{ background: e.color }} aria-hidden />
+                  {e.name}
+                </span>
+                <span className="num font-medium">{e.value}%</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      ) : null}
     </Panel>
   )
 }

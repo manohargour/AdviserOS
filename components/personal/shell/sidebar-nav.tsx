@@ -14,7 +14,6 @@ import {
   Sparkles,
   UserRoundCheck,
 } from 'lucide-react'
-import { accounts } from '@/lib/personal/data'
 import { signOut } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 
@@ -24,7 +23,7 @@ export const navItems = [
   { href: '/me/portfolio', label: 'Portfolio', icon: PieChart },
   { href: '/me/advisor', label: 'AI Advisor', icon: Sparkles },
   { href: '/me/opportunities', label: 'Opportunities', icon: Compass },
-  { href: '/me/insights', label: 'Insights', icon: Lightbulb, badge: 3 },
+  { href: '/me/insights', label: 'Insights', icon: Lightbulb },
   { href: '/me/accounts', label: 'Accounts', icon: Landmark },
   { href: '/me/adviser', label: 'My adviser', icon: UserRoundCheck, clientOnly: true },
 ]
@@ -71,7 +70,6 @@ export function SidebarNav({
     router.push('/sign-in?as=personal')
     router.refresh()
   }
-  const connected = accounts.filter((a) => a.status === 'Connected').length
 
   return (
     <div className="flex h-full flex-col">
@@ -81,7 +79,7 @@ export function SidebarNav({
 
       <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-2">
         <ul className="flex flex-col gap-0.5">
-          {items.map(({ href, label, icon: Icon, badge }) => {
+          {items.map(({ href, label, icon: Icon }) => {
             const active = href === '/me' ? pathname === '/me' : pathname.startsWith(href)
             return (
               <li key={href}>
@@ -101,9 +99,6 @@ export function SidebarNav({
                     aria-hidden
                   />
                   <span className="flex-1">{label}</span>
-                  {badge ? (
-                    <span className="num rounded-full bg-ai-soft px-1.5 text-[10px] font-semibold text-ai-foreground">{badge}</span>
-                  ) : null}
                 </Link>
               </li>
             )
@@ -132,11 +127,9 @@ export function SidebarNav({
               <span className="absolute inset-0 animate-ping rounded-full bg-positive/40" />
               <span className="relative size-2 rounded-full bg-positive" />
             </span>
-            Connected accounts
+            Your accounts
           </span>
-          <span className="num font-medium text-foreground">
-            {connected}/{accounts.length}
-          </span>
+          <span className="num font-medium text-foreground">Manage</span>
         </Link>
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">

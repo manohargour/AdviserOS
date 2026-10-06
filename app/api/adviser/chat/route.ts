@@ -15,6 +15,8 @@ import { tasks } from '@/lib/db/schema'
 import { ensureSeeded, getAlerts, getClientBySlug, getClients, getReviews, getTasks } from '@/lib/workspace'
 import { logActivity } from '@/lib/activity'
 import { getThread, saveThread, THREAD_ID_PATTERN, threadOwnedByAnotherUser } from '@/lib/chat-store'
+import { AI_MODEL } from '@/lib/ai'
+import { rateLimit, tooManyRequests } from '@/lib/rate-limit'
 
 export const maxDuration = 60
 
@@ -46,6 +48,9 @@ export async function POST(req: Request) {
   if (!session?.user) return new Response('Unauthorized', { status: 401 })
   const userId = session.user.id
 
+  const limited = rateLimit(`chat:${userId}`, 20, 60_000)
+  if (!limited.ok) return tooManyRequests(limited.retryAfter)
+
   const parsed = requestSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return new Response('Invalid request', { status: 400 })
   const { id: threadId, messages, clientSlug } = parsed.data
@@ -67,7 +72,7 @@ export async function POST(req: Request) {
   }
 
   const result = streamText({
-    model: 'anthropic/claude-sonnet-5.5',
+    model: AI_MODEL,
     instructions: instructionsFor(session.user.name || 'the adviser', clientSlug),
     messages: await convertToModelMessages(messages as UIMessage[]),
     stopWhen: isStepCount(8),

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { netWorth, netWorthSeries, type Period } from '@/lib/personal/data'
+import type { Period } from '@/lib/personal/data'
+import type { NetWorth } from '@/lib/personal/store'
 import { formatCompactGBP, formatGBP } from '@/lib/personal/format'
 import { Delta, Panel, Segmented } from '@/components/personal/wealth/primitives'
 import { ChartTooltipBox } from '@/components/personal/wealth/chart-tooltip'
@@ -17,19 +18,19 @@ function formatTick(iso: string, period: Period) {
   return d.toLocaleDateString('en-GB', { year: 'numeric' })
 }
 
-export function NetWorthCard() {
+export function NetWorthCard({ netWorth, series }: { netWorth: NetWorth; series: Record<Period, { date: string; value: number }[]> }) {
   const [period, setPeriod] = useState<Period>('1M')
-  const data = netWorthSeries[period]
+  const data = series[period]
   const { change, pct } = useMemo(() => {
     if (period === '1M') return { change: netWorth.monthChange, pct: netWorth.monthChangePct }
-    const first = data[0].value
+    const first = data[0]?.value ?? netWorth.total
     const c = netWorth.total - first
-    return { change: c, pct: (c / first) * 100 }
-  }, [data, period])
+    return { change: c, pct: first > 0 ? (c / first) * 100 : 0 }
+  }, [data, period, netWorth])
 
   const min = Math.min(...data.map((d) => d.value))
   const max = Math.max(...data.map((d) => d.value))
-  const pad = (max - min) * 0.15
+  const pad = (max - min) * 0.15 || 1
 
   return (
     <Panel className="flex flex-col p-5 lg:col-span-2">

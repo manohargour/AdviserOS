@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { ArrowLeft, Info } from 'lucide-react'
+import { ArrowLeft, Info, Trash2 } from 'lucide-react'
 import { projectGoal, type Goal } from '@/lib/personal/data'
+import { deleteGoal } from '@/app/actions/personal-data'
 import { formatCompactGBP, formatGBP } from '@/lib/personal/format'
 import { AiMark, Panel, PanelHeader, Pill } from '@/components/personal/wealth/primitives'
 import { ChartTooltipBox } from '@/components/personal/wealth/chart-tooltip'
@@ -17,6 +19,8 @@ function probabilityWith(goal: Goal, extra: number, techCut: boolean) {
 }
 
 export function GoalDetail({ goal }: { goal: Goal }) {
+  const router = useRouter()
+  const [deleting, startDelete] = useTransition()
   const [extra, setExtra] = useState(0)
   const [techCut, setTechCut] = useState(false)
   const data = useMemo(() => projectGoal(goal, extra), [goal, extra])
@@ -50,12 +54,29 @@ export function GoalDetail({ goal }: { goal: Goal }) {
               <p className="text-sm text-muted-foreground">{goal.description}</p>
             </div>
           </div>
-          <AskAiButton question={`Analyse my ${goal.name} goal`} variant="soft">
-            Discuss this goal
-          </AskAiButton>
+          <div className="flex items-center gap-2">
+            <AskAiButton question={`Analyse my ${goal.name} goal`} variant="soft">
+              Discuss this goal
+            </AskAiButton>
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm(`Delete the "${goal.name}" goal?`))
+                  startDelete(async () => {
+                    await deleteGoal(goal.id)
+                    router.push('/me/goals')
+                    router.refresh()
+                  })
+              }}
+              disabled={deleting}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border bg-card px-3 text-[13px] font-medium text-muted-foreground hover:border-negative/30 hover:text-negative disabled:opacity-50"
+            >
+              <Trash2 className="size-3.5" aria-hidden />
+              Delete
+            </button>
+          </div>
         </div>
       </div>
-
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel className="p-5 lg:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-4">

@@ -1,17 +1,7 @@
-import { notFound } from 'next/navigation'
-import type { Metadata } from 'next'
-import { getAnalysis } from '@/lib/personal/analysis'
-import { InvestmentAnalysis } from '@/components/personal/opportunities/investment-analysis'
+import { redirect } from 'next/navigation'
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params
-  const a = getAnalysis(id)
-  return { title: a ? `${a.name} analysis` : 'Analysis' }
-}
-
-export default async function AnalysisPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const a = getAnalysis(id)
-  if (!a) notFound()
-  return <InvestmentAnalysis a={a} />
+// Per-security research requires a market-data connection, which is not wired up.
+// Until then, send users back to the derived, data-grounded opportunities list.
+export default function AnalysisPage() {
+  redirect('/me/opportunities')
 }

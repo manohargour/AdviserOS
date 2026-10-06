@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { boolean, doublePrecision, integer, jsonb, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 import type { Client } from '@/lib/data'
 
 export const user = pgTable('user', {
@@ -166,3 +166,77 @@ export const reportSends = pgTable('report_sends', {
   error: text('error'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
 })
+
+/* ------------------------------------------------------------------ */
+/* Personal (B2C) wealth — per-user, manually editable                 */
+/* ------------------------------------------------------------------ */
+
+export const personalProfile = pgTable('personal_profile', {
+  userId: text('userId').primaryKey(),
+  riskProfile: text('riskProfile').notNull().default('Balanced'),
+  riskScore: integer('riskScore').notNull().default(5),
+  age: integer('age'),
+  baseCurrency: text('baseCurrency').notNull().default('GBP'),
+  monthlySpending: integer('monthlySpending').notNull().default(0),
+  seeded: boolean('seeded').notNull().default(false),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export type PersonalAccountKind = 'investment' | 'property' | 'cash' | 'liability'
+
+export const personalAccounts = pgTable('personal_accounts', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  name: text('name').notNull(),
+  type: text('type').notNull().default(''),
+  kind: text('kind').$type<PersonalAccountKind>().notNull().default('investment'),
+  value: integer('value').notNull().default(0),
+  region: text('region').notNull().default('UK'),
+  status: text('status').$type<'Connected' | 'Manual'>().notNull().default('Manual'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export type PersonalAssetClass = 'Equity' | 'Bonds' | 'Property' | 'Cash' | 'Alternatives'
+
+export const personalHoldings = pgTable('personal_holdings', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  accountId: integer('accountId'),
+  name: text('name').notNull(),
+  ticker: text('ticker').notNull().default(''),
+  value: integer('value').notNull().default(0),
+  returnPct: doublePrecision('returnPct').notNull().default(0),
+  dayPct: doublePrecision('dayPct').notNull().default(0),
+  assetClass: text('assetClass').$type<PersonalAssetClass>().notNull().default('Equity'),
+  accountLabel: text('accountLabel').notNull().default('GIA'),
+  sector: text('sector').notNull().default('Diversified'),
+  region: text('region').notNull().default('Global'),
+  currency: text('currency').notNull().default('GBP'),
+  goal: text('goal').notNull().default(''),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export const personalGoals = pgTable(
+  'personal_goals',
+  {
+    id: serial('id').primaryKey(),
+    userId: text('userId').notNull(),
+    slug: text('slug').notNull(),
+    name: text('name').notNull(),
+    description: text('description').notNull().default(''),
+    icon: text('icon').$type<'freedom' | 'education' | 'home' | 'retirement' | 'car'>().notNull().default('freedom'),
+    current: integer('current').notNull().default(0),
+    target: integer('target').notNull().default(0),
+    targetDate: text('targetDate').notNull().default(''),
+    targetYear: integer('targetYear').notNull().default(2030),
+    monthly: integer('monthly').notNull().default(0),
+    expectedReturn: doublePrecision('expectedReturn').notNull().default(5),
+    requiredReturn: doublePrecision('requiredReturn').notNull().default(4),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('personal_goals_userId_slug_key').on(t.userId, t.slug)],
+)

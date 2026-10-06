@@ -17,3 +17,6 @@ export const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {
 export function isEditable(status: ReportStatus) {
   return status === 'draft' || status === 'in_review'
 }
+
+/** How long a report acknowledgement link stays valid after it is sent. */
+export const ACK_TTL_MS = 30 * 24 * 60 * 60 * 1000

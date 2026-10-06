@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUp, BookOpen, Calculator, Lightbulb, ListChecks, ShieldCheck } from 'lucide-react'
-import { answerQuestion, suggestedQuestions, type AdvisorAnswer } from '@/lib/personal/advisor'
+import { answerFromSnapshot, suggestedQuestions, type AdvisorAnswer, type PersonalInput } from '@/lib/personal/insights'
 import { AiMark, Pill } from '@/components/personal/wealth/primitives'
 import { cn } from '@/lib/utils'
 
@@ -53,7 +53,17 @@ function AnswerBlock({ answer, compact }: { answer: AdvisorAnswer; compact?: boo
   )
 }
 
-export function AdvisorChat({ compact = false, initialQuestion }: { compact?: boolean; initialQuestion?: string }) {
+export function AdvisorChat({
+  compact = false,
+  initialQuestion,
+  counts,
+  data,
+}: {
+  compact?: boolean
+  initialQuestion?: string
+  counts?: { accounts: number; goals: number; holdings: number }
+  data?: PersonalInput
+}) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const nextId = useRef(0)
@@ -73,7 +83,7 @@ export function AdvisorChat({ compact = false, initialQuestion }: { compact?: bo
     ])
     setInput('')
     window.setTimeout(() => {
-      setMessages((m) => m.map((msg) => (msg.id === botId ? { ...msg, pending: false, answer: answerQuestion(q) } : msg)))
+      setMessages((m) => m.map((msg) => (msg.id === botId ? { ...msg, pending: false, answer: answerFromSnapshot(data, q) } : msg)))
     }, 900)
   }
 
@@ -100,7 +110,9 @@ export function AdvisorChat({ compact = false, initialQuestion }: { compact?: bo
               <AiMark size={compact ? 'sm' : 'md'} />
               <div>
                 <p className={cn('font-medium', compact ? 'text-[13px]' : 'text-[15px]')}>
-                  I have context on your 9 accounts, 5 goals and 13 holdings.
+                  {counts
+                    ? `I have context on your ${counts.accounts} account${counts.accounts === 1 ? '' : 's'}, ${counts.goals} goal${counts.goals === 1 ? '' : 's'} and ${counts.holdings} holding${counts.holdings === 1 ? '' : 's'}.`
+                    : 'I have context on the accounts, goals and holdings you have entered.'}
                 </p>
                 <p className="mt-0.5 text-[13px] text-muted-foreground text-pretty">
                   Ask about your plan, a decision, or a what-if. I&apos;ll separate facts from assumptions.

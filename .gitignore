@@ -14,3 +14,7 @@ node_modules
 .next/
 .DS_Store
 .vercel
+
+# Build artifacts
+next-env.d.ts
+*.tsbuildinfo

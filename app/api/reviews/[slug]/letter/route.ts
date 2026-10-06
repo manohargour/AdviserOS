@@ -3,6 +3,8 @@ import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { logActivity } from '@/lib/activity'
 import { ensureSeeded, getClientBySlug, saveLetterDraft } from '@/lib/workspace'
+import { AI_MODEL } from '@/lib/ai'
+import { rateLimit, tooManyRequests } from '@/lib/rate-limit'
 
 export const maxDuration = 60
 
@@ -16,12 +18,14 @@ export async function POST(_req: Request, { params }: { params: Promise<{ slug: 
   if (!/^[a-z0-9-]{1,64}$/.test(slug)) return new Response('Invalid client', { status: 400 })
 
   const userId = session.user.id
+  const limited = rateLimit(`letter:${userId}`, 10, 60_000)
+  if (!limited.ok) return tooManyRequests(limited.retryAfter)
   await ensureSeeded(userId)
   const client = await getClientBySlug(userId, slug)
   if (!client) return new Response('Client not found', { status: 404 })
 
   const result = streamText({
-    model: 'anthropic/claude-sonnet-5.5',
+    model: AI_MODEL,
     system: `You draft annual review letters for a UK financial adviser named ${session.user.name}. The adviser edits and approves every letter before it is sent.
 
 Rules:

@@ -1,412 +1,141 @@
-Rename the product from **Adviser Review Copilot** to:
+# AdviserOS
 
-# Adviser Copilot
+An AI copilot for UK financial advisers, with a built-in personal-wealth experience ("Meridian") for their clients and independent users. It brings client data, portfolios, risk information and documents together, prepares the work, surfaces what needs attention, and leaves every judgement with a regulated human.
 
-The product should feel like an AI copilot embedded into the financial adviser's day-to-day workflow, rather than merely an annual-review application.
+The repository is a single [Next.js](https://nextjs.org) 16 (App Router) application that serves two experiences from one codebase:
 
-Keep all existing annual-review functionality, but change the overall product experience so that **Adviser Copilot is a persistent assistant across the application**.
+| Experience | Route | Audience | Brand |
+| --- | --- | --- | --- |
+| Adviser workspace | `/` | Financial advisers running client reviews | AdviserOS |
+| Personal wealth | `/me` | Independent (B2C) users and adviser clients | Meridian |
 
-## Core product positioning
+## Roles
 
-Primary headline:
+A user picks a role once at sign-up ([lib/roles.ts](lib/roles.ts)); it cannot be changed by a later profile update.
 
-**Your AI copilot for client work.**
+- **adviser** — runs client reviews in the AdviserOS workspace.
+- **personal** — an independent user managing their own wealth, with no adviser.
+- **client** — a personal user who is served by an adviser and receives their reports. A `personal` user automatically becomes a `client` when they link an adviser's report.
 
-Subheading:
+## Features
 
-**Bring client data, portfolios, risk information and documents together. Adviser Copilot prepares the work, surfaces what needs attention and leaves judgement with the adviser.**
+### Adviser workspace (`/`)
+- Client book, reviews, tasks, alerts, documents and data sources.
+- A persistent **AdviserOS copilot** panel that is grounded in real client data via tools (never invents figures) and always leaves decisions to the adviser.
+- Annual review → report → email → client acknowledgement flow, with an audit activity log and idempotent email sending.
+- AI-drafted review letters with a mandatory adviser-recommendation placeholder.
 
-Secondary value proposition:
+### Personal wealth — Meridian (`/me`)
+Per-user, persisted and fully editable — nothing is shared, everything is computed from the user's own data.
 
-**Less administration. More time with clients.**
+- **Accounts** — add, edit and delete investment accounts, property, cash and liabilities; these drive net worth.
+- **Holdings** — add and delete positions; these drive the portfolio, allocation and exposure views.
+- **Goals** — create, track and delete goals with monthly-compounded projections and a success probability.
+- **Overview** — net worth with history, allocation by asset class / region / currency / account, and a computed portfolio-health score.
+- **Insights, Opportunities and an AI advisor** — all derived from the user's real figures (concentration, cash buffer, tax wrappers, goal funding, currency mix) with clear disclaimers. The advisor is informational and never gives regulated advice.
+- **Scenario simulator** — applies market shocks to the user's actual holdings to estimate the impact on net worth.
+- New accounts start empty, with a one-click **Load sample data** option for demos.
 
-Do not position the product as an autonomous financial adviser.
+## Tech stack
 
-Adviser Copilot assists regulated professionals by finding information, assembling data, drafting documents and identifying items requiring human review.
+- **Framework:** Next.js 16 (App Router), React 19
+- **Language:** TypeScript (strict)
+- **Database:** PostgreSQL via [Drizzle ORM](https://orm.drizzle.team) and `pg`
+- **Auth:** [better-auth](https://www.better-auth.com) (email + password)
+- **AI:** [AI SDK](https://ai-sdk.dev) v7 through an AI Gateway (model configurable)
+- **Email:** [Resend](https://resend.com)
+- **PDF:** `@react-pdf/renderer`
+- **UI:** Tailwind CSS v4, shadcn-style components, Recharts
+- **Testing:** [Vitest](https://vitest.dev)
+- **Package manager:** pnpm
 
----
+## Getting started
 
-## Change the main application layout
+### Prerequisites
+- Node.js 20+ and pnpm
+- A PostgreSQL database
 
-Use a three-part interface:
+### Install
 
-### Left navigation
+```bash
+pnpm install
+```
 
-Include:
+### Environment variables
 
-- Home
-- Clients
-- Reviews
-- Tasks
-- Alerts
-- Documents
-- Data Sources
+Create a `.env.local` file in the project root:
 
-At the bottom show:
+```bash
+# Database (required)
+DATABASE_URL="postgres://user:password@host:5432/dbname"
 
-- Integrations
-- Settings
+# Auth (required). Generate a long random secret.
+BETTER_AUTH_SECRET="a-long-random-secret-at-least-32-chars"
+# Optional in local dev; set in production to your canonical URL.
+BETTER_AUTH_URL="https://your-app.example.com"
 
-### Main workspace
+# AI (required for the copilot/letter features). Configure your AI Gateway
+# credentials per the AI SDK provider you use. Model is overridable:
+AI_MODEL="anthropic/claude-sonnet-4"
 
-This contains whatever the adviser is currently working on:
+# Email (optional — report sending is disabled until set)
+RESEND_API_KEY="re_..."
+RESEND_FROM_EMAIL="Your Firm <reports@yourdomain.com>"
 
-- client overview
-- annual review
-- portfolio
-- documents
-- alerts
-- outstanding tasks
+# Demo reset cron (optional)
+CRON_SECRET="another-random-secret"
+```
 
-### Persistent Adviser Copilot panel
+### Database schema
 
-Add a right-side panel visible throughout the application.
+There is no migration tooling committed to the repo. The schema lives in [lib/db/schema.ts](lib/db/schema.ts).
 
-Header:
+- **Auth tables** are managed by better-auth.
+- **Personal (Meridian) tables** (`personal_profile`, `personal_accounts`, `personal_holdings`, `personal_goals`) are created on first use at runtime by `ensurePersonalTables()` in [lib/personal/store.ts](lib/personal/store.ts).
+- **Adviser workspace tables** (`clients`, `reviews`, `tasks`, `alerts`, `reports`, etc.) are expected to exist and are seeded with sample data on an adviser's first load. Provision them from the Drizzle schema before running in production (for example with `drizzle-kit push`).
 
-**Adviser Copilot**
+### Run
 
-Include a small status indicator:
-
-**Client context loaded**
-
-The Copilot should understand which client/page the adviser currently has open.
-
-For John Smith, show:
-
-**Working with John Smith**
-
-Then provide a conversational interface.
-
-Suggested prompts:
-
-- Prepare John's annual review
-- What changed since his last review?
-- What requires my attention?
-- Draft the review letter
-- Explain the equity allocation change
-- Show the source of his risk score
-- What information is missing?
-- Summarise John before my meeting
-
----
-
-## Make the Copilot actionable
-
-Do not make this look like a generic chatbot.
-
-When the adviser asks:
-
-**“Prepare John's annual review.”**
-
-Show the Copilot performing actions:
-
-✓ Loaded Xplan client information  
-✓ Retrieved portfolio data  
-✓ Loaded risk assessment  
-✓ Compared previous review  
-✓ Identified 4 changes  
-✓ Drafted annual review  
-
-Then respond:
-
-**John's annual review is 92% prepared.**
-
-3 items require your confirmation.
-
-Buttons:
-
-**Open Review**
-**Show Outstanding Items**
-
----
-
-If the adviser asks:
-
-**“What changed since last year?”**
-
-Respond with structured information:
-
-### Changes detected
-
-**Portfolio value**
-£412,000 → £438,500  
-+£26,500
-
-**Equity allocation**
-62% → 69%
-
-**Pension**
-Income withdrawals detected
-
-**Client circumstances**
-No material changes found in available fact-find information.
-
-Include:
-
-**View sources**
-
----
-
-If the adviser asks:
-
-**“Where did the 69% equity number come from?”**
-
-Show:
-
-**Source**
-
-Investment Platform  
-Portfolio Export — September 2026
-
-Equity holdings: £302,565  
-Total portfolio: £438,500
-
-Calculated equity allocation:
-
-**69.0%**
-
-Button:
-
-**Open Source**
-
-This interaction should demonstrate that Adviser Copilot is grounded in actual client data rather than simply generating text.
-
----
-
-## Add proactive Copilot suggestions
-
-The Copilot should sometimes surface useful actions without being explicitly asked.
-
-Example:
-
-### Adviser Copilot
-
-**John's annual review is due.**
-
-I've detected three items you may want to review:
-
-1. Equity allocation increased by 7 percentage points
-2. Pension withdrawals started since the previous review
-3. Current risk score remains Moderate 5/10
-
-**Prepare Review**
-
----
-
-Another example:
-
-### Before a client meeting
-
-**Sarah Williams meeting in 25 minutes**
-
-Would you like me to prepare a briefing?
-
-Button:
-
-**Prepare Client Brief**
-
-After clicking:
-
-- current portfolio
-- recent changes
-- client goals
-- outstanding actions
-- previous adviser notes
-- items worth discussing
-
----
-
-## Dashboard redesign
-
-The dashboard should feel like a work command centre.
-
-Headline:
-
-**Good morning**
-
-Underneath:
-
-**Here's where your attention is needed today.**
-
-Cards:
-
-### 15
-Reviews due
-
-### 6
-Clients need attention
-
-### 8
-Drafts ready for approval
-
-### 31 hrs
-Estimated admin time saved this month
-
-Below this, create:
-
-## Adviser Copilot suggests
-
-Show cards such as:
-
-**John Smith**
-Annual review due  
-4 changes detected
-
-**Prepare Review**
-
----
-
-**Emma Thompson**
-Client meeting today  
-2 outstanding actions
-
-**Prepare Brief**
-
----
-
-**David Patel**
-Risk profile updated  
-Portfolio review may be required
-
-**Review Changes**
-
----
-
-## Client page
-
-When opening John Smith, maintain the main client information in the centre.
-
-Tabs:
-
-- Overview
-- Portfolio
-- Goals
-- Reviews
-- Documents
-- Activity
-
-The Adviser Copilot remains visible on the right.
-
-At the top of the client page show:
-
-**John Smith**
-
-£438,500 portfolio  
-Moderate Risk · 5/10  
-Annual Review Due
-
-Quick actions:
-
-**Prepare Review**
-**Generate Client Brief**
-**Draft Letter**
-
----
-
-## Copilot command bar
-
-Also add a global command bar at the top.
-
-Placeholder:
-
-**Ask Adviser Copilot or tell it what to do…**
-
-Example commands:
-
-“Prepare all reviews due this week”
-
-“Show clients requiring adviser attention”
-
-“Draft John's annual review”
-
-“Which clients have changed risk profiles?”
-
-“Prepare me for Sarah's meeting”
-
-This should reinforce that the product is an intelligent workflow layer across the adviser's existing systems.
-
----
-
-## Product concept
-
-The application should visually communicate:
-
-Xplan  
-Investment platforms  
-Risk profiling  
-Fund information  
-Client documents  
-Meeting notes
-
-↓  
-
-**Adviser Copilot**
-
-↓
-
-Reviews  
-Client briefs  
-Suitability drafts  
-Alerts  
-Tasks  
-Documents  
-Adviser decisions
-
-The underlying idea is:
-
-**Existing systems remain systems of record. Adviser Copilot becomes the intelligence and workflow layer above them.**
-
----
-
-## Critical UX principle
-
-The user should never feel that they are simply talking to ChatGPT inside another application.
-
-Adviser Copilot must:
-
-- understand the current client context
-- retrieve relevant information
-- take actions
-- populate screens
-- generate drafts
-- identify missing information
-- show evidence
-- link to source data
-- ask for adviser judgement where required
-
-Use conversational AI only as the interface to these capabilities.
-
-Every important Copilot response should ideally have an action attached to it.
-
-Examples:
-
-**Open Review**
-
-**View Source**
-
-**Add to Report**
-
-**Mark Reviewed**
-
-**Generate Draft**
-
-**Request Client Confirmation**
-
----
-
-## Branding
-
-Product name:
-
-**Adviser Copilot**
-
-Possible small tagline underneath logo:
-
-**AI workspace for financial advisers**
-
-Keep the existing premium financial-services design.
-
-Do not make it look like Microsoft's Copilot branding.
-
-It should have its own restrained enterprise identity.
+```bash
+pnpm dev     # start the dev server (http://localhost:3000)
+pnpm build   # production build (type-checked)
+pnpm start   # run the production build
+pnpm test    # run the Vitest unit tests
+```
+
+## Testing
+
+Unit tests live in [tests/](tests/) and cover the pure, security- and money-sensitive logic: goal projections, per-user insights/opportunities/scenario derivations, the rate limiter, and report/acknowledgement status rules.
+
+```bash
+pnpm test
+```
+
+## Project structure
+
+```
+app/            # App Router routes
+  (adviser)     # /, /clients, /reviews, /reports, /tasks, /alerts, ...
+  me/           # /me — the personal (Meridian) experience
+  actions/      # server actions (reports, workspace, personal-data, ...)
+  api/          # route handlers (adviser chat, letters, report PDF, cron)
+components/      # UI, grouped by feature (adviser, personal, reports, ...)
+lib/
+  db/           # Drizzle client and schema
+  personal/     # per-user store, pure derivations (projection, insights)
+  ai.ts         # central AI model config
+  rate-limit.ts # fixed-window limiter for AI endpoints
+  auth.ts, roles.ts, workspace.ts, email.ts, ...
+tests/          # Vitest unit tests
+```
+
+## Security & compliance notes
+
+- All data access is scoped by `userId`; the adviser and personal data stores are isolated per user.
+- The streaming AI endpoints are rate-limited per user ([lib/rate-limit.ts](lib/rate-limit.ts)). The default limiter is in-memory (per instance); back it with a shared store for multi-instance deployments.
+- Report acknowledgement links are single-purpose tokens that expire after 30 days.
+- The adviser copilot and the personal advisor both prepare information and surface options; neither presents regulated financial advice.
+
+## Deployment
+
+The app is designed for Vercel. Configure the environment variables above, provision the database schema, and (optionally) set up the demo-reset cron in [vercel.json](vercel.json) with a `CRON_SECRET`.

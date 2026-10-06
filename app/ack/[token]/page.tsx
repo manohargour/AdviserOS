@@ -7,6 +7,7 @@ import { db } from '@/lib/db'
 import { reportAcknowledgements, reports } from '@/lib/db/schema'
 import { getClientBySlug } from '@/lib/workspace'
 import { ADVISER } from '@/lib/data'
+import { ACK_TTL_MS } from '@/lib/report-status'
 import { AcknowledgeForm } from '@/components/ack/acknowledge-form'
 
 export const metadata: Metadata = { title: 'Confirm receipt of your report', robots: { index: false, follow: false } }
@@ -33,6 +34,7 @@ export default async function AcknowledgePage({ params }: { params: Promise<{ to
     .limit(1)
   if (!ack) notFound()
   const client = await getClientBySlug(ack.userId, ack.clientSlug)
+  const expired = !ack.acknowledgedAt && Date.now() - ack.createdAt.getTime() >= ACK_TTL_MS
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-muted/40 px-4 py-12">
@@ -57,6 +59,13 @@ export default async function AcknowledgePage({ params }: { params: Promise<{ to
               <h1 className="text-lg font-semibold">Thank you{ack.acknowledgedName ? `, ${ack.acknowledgedName.split(' ')[0]}` : ''}</h1>
               <p className="text-sm text-muted-foreground">
                 You confirmed receipt on {fmt(ack.acknowledgedAt)}. Your adviser has been notified. There&apos;s nothing else you need to do.
+              </p>
+            </div>
+          ) : expired ? (
+            <div className="space-y-2 text-center">
+              <h1 className="text-lg font-semibold">This link has expired</h1>
+              <p className="text-sm text-muted-foreground">
+                For your security, confirmation links are valid for 30 days. Please ask your adviser to resend your report.
               </p>
             </div>
           ) : (
