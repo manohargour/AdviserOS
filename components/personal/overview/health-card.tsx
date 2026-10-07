@@ -1,4 +1,4 @@
-import { health } from '@/lib/personal/data'
+import type { HealthFactor } from '@/lib/personal/store'
 import { Meter, Panel, PanelHeader } from '@/components/personal/wealth/primitives'
 
 function toneFor(score: number) {
@@ -7,11 +7,19 @@ function toneFor(score: number) {
   return 'warning' as const
 }
 
-export function HealthCard() {
+function summaryFor(score: number) {
+  if (score >= 85) return { title: 'Strong foundations.', rest: 'Your plan scores well across diversification, liquidity and goal alignment.' }
+  if (score >= 72) return { title: 'Sound foundations.', rest: 'Most factors are healthy; the lowest-scoring ones have the most room to improve.' }
+  if (score > 0) return { title: 'Room to improve.', rest: 'Several factors are below target. Focus on the lowest scores first.' }
+  return { title: 'Add your data.', rest: 'Add accounts, holdings and goals to see your portfolio health.' }
+}
+
+export function HealthCard({ health }: { health: { score: number; factors: HealthFactor[] } }) {
   const r = 44
   const c = 2 * Math.PI * r
   const arc = c * 0.75
   const filled = arc * (health.score / 100)
+  const summary = summaryFor(health.score)
 
   return (
     <Panel className="flex flex-col pb-5">
@@ -28,8 +36,7 @@ export function HealthCard() {
           </div>
         </div>
         <p className="text-[13px] leading-relaxed text-muted-foreground text-pretty">
-          <span className="font-medium text-foreground">Sound foundations.</span> Goal alignment and liquidity are strong;
-          concentration and tax efficiency have the most room to improve.
+          <span className="font-medium text-foreground">{summary.title}</span> {summary.rest}
         </p>
       </div>
       <ul className="mt-5 flex flex-col gap-3.5 px-5">

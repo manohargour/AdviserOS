@@ -1,14 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
-import { goals as initialGoals, type Goal } from '@/lib/personal/data'
+import type { Goal } from '@/lib/personal/data'
+import { addGoal, loadSample } from '@/app/actions/personal-data'
 import { formatCompactGBP, formatGBP } from '@/lib/personal/format'
 import { AiMark, PageHeader, Panel } from '@/components/personal/wealth/primitives'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/personal/ui/sheet'
 import { GoalCard } from './goal-card'
 import { GoalIcon, goalIcons } from './goal-meta'
 import { cn } from '@/lib/utils'
+
+type GoalInput = {
+  name: string
+  description: string
+  icon: Goal['icon']
+  current: number
+  target: number
+  targetYear: number
+  monthly: number
+  expectedReturn: number
+}
 
 const iconOptions: { value: Goal['icon']; label: string }[] = [
   { value: 'freedom', label: 'Freedom' },
@@ -25,7 +38,7 @@ function estimateProbability(current: number, target: number, monthly: number, y
   return Math.max(8, Math.min(96, Math.round(40 + (ratio - 1) * 120 + 35)))
 }
 
-function CreateGoalSheet({ open, onOpenChange, onCreate }: { open: boolean; onOpenChange: (v: boolean) => void; onCreate: (g: Goal) => void }) {
+function CreateGoalSheet({ open, onOpenChange, onCreate, saving }: { open: boolean; onOpenChange: (v: boolean) => void; onCreate: (g: GoalInput) => void; saving: boolean }) {
   const [name, setName] = useState('')
   const [icon, setIcon] = useState<Goal['icon']>('home')
   const [target, setTarget] = useState(100_000)
@@ -40,22 +53,15 @@ function CreateGoalSheet({ open, onOpenChange, onCreate }: { open: boolean; onOp
     e.preventDefault()
     if (!name.trim()) return
     onCreate({
-      id: `goal-${Date.now()}`,
       name: name.trim(),
       description: 'New goal · funding will be assigned from unallocated assets.',
       current,
       target,
-      targetDate: `December ${year}`,
       targetYear: year,
       monthly,
       expectedReturn: rate,
-      requiredReturn: rate - 0.4,
-      status: probability >= 80 ? 'On Track' : probability >= 60 ? 'Slightly Behind' : 'Behind',
-      probability,
       icon,
     })
-    setName('')
-    onOpenChange(false)
   }
 
   const field = 'h-9 w-full rounded-lg border bg-card px-3 text-[13px] outline-none focus:border-ring/50 focus:ring-3 focus:ring-ring/15'
@@ -136,9 +142,9 @@ function CreateGoalSheet({ open, onOpenChange, onCreate }: { open: boolean; onOp
           <button
             type="submit"
             className="mt-auto inline-flex h-10 items-center justify-center rounded-lg bg-primary text-[13px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            disabled={!name.trim()}
+            disabled={!name.trim() || saving}
           >
-            Create goal
+            {saving ? 'Saving…' : 'Create goal'}
           </button>
         </form>
       </SheetContent>
@@ -146,13 +152,65 @@ function CreateGoalSheet({ open, onOpenChange, onCreate }: { open: boolean; onOp
   )
 }
 
-export function GoalsBoard() {
-  const [goals, setGoals] = useState(initialGoals)
+export function GoalsBoard({ goals }: { goals: Goal[] }) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [pending, startTransition] = useTransition()
   const totalTarget = goals.reduce((s, g) => s + g.target, 0)
   const totalMonthly = goals.reduce((s, g) => s + g.monthly, 0)
   const onTrack = goals.filter((g) => g.status === 'Ahead' || g.status === 'On Track').length
   const [featured, ...rest] = goals
+  const attention = [...goals].sort((a, b) => a.probability - b.probability)[0]
+
+  function create(input: GoalInput) {
+    startTransition(async () => {
+      const result = await addGoal(input)
+      if (result.ok) {
+        setOpen(false)
+        router.refresh()
+      } else {
+        alert(result.error)
+      }
+    })
+  }
+
+  function seed() {
+    startTransition(async () => {
+      await loadSample()
+      router.refresh()
+    })
+  }
+
+  if (goals.length === 0) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          eyebrow="Goals"
+          title="Your Money Has a Job"
+          description="Connect every investment decision to the life you are building."
+          actions={
+            <button type="button" onClick={() => setOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">
+              <Plus className="size-4" aria-hidden />
+              Create a Goal
+            </button>
+          }
+        />
+        <Panel className="flex flex-col items-center gap-3 p-12 text-center">
+          <p className="text-sm font-medium">No goals yet</p>
+          <p className="max-w-sm text-[13px] text-muted-foreground">Give your money a job. Create goals for retirement, a home, education or anything else, and track the probability of reaching each one.</p>
+          <div className="mt-2 flex gap-2">
+            <button type="button" onClick={() => setOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">
+              <Plus className="size-4" aria-hidden />Create your first goal
+            </button>
+            <button type="button" onClick={seed} disabled={pending} className="inline-flex h-9 items-center gap-1.5 rounded-lg border bg-card px-3 text-[13px] font-medium hover:bg-muted disabled:opacity-60">
+              Load sample data
+            </button>
+          </div>
+        </Panel>
+        <CreateGoalSheet open={open} onOpenChange={setOpen} onCreate={create} saving={pending} />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -195,19 +253,21 @@ export function GoalsBoard() {
             <AiMark size="sm" />
             <h2 className="text-sm font-semibold">What needs attention</h2>
           </div>
-          <div className="rounded-xl border border-warning/20 bg-warning-soft p-3.5">
-            <div className="flex items-center gap-2">
-              <GoalIcon icon="retirement" className="size-7 bg-card" />
-              <p className="text-[13px] font-medium">India Retirement is slightly behind</p>
+          {attention ? (
+            <div className="rounded-xl border border-warning/20 bg-warning-soft p-3.5">
+              <div className="flex items-center gap-2">
+                <GoalIcon icon={attention.icon} className="size-7 bg-card" />
+                <p className="text-[13px] font-medium">
+                  {attention.name} is {attention.status.toLowerCase()}
+                </p>
+              </div>
+              <p className="mt-2 text-[12px] leading-relaxed text-foreground/80 text-pretty">
+                It has an estimated {attention.probability}% probability of reaching {formatCompactGBP(attention.target)} by {attention.targetDate}. Increasing the monthly contribution or extending the date would improve this.
+              </p>
             </div>
-            <p className="mt-2 text-[12px] leading-relaxed text-foreground/80 text-pretty">
-              It requires 7.1% p.a. against an expected 6.4%. Redirecting £400/month from the Family Car goal after March 2028
-              closes most of the gap.
-            </p>
-          </div>
+          ) : null}
           <p className="text-[12px] leading-relaxed text-muted-foreground text-pretty">
-            Four of five goals are on track. Financial Freedom and Home Purchase share the same ISA — a large house deposit in 2029
-            would reduce Freedom probability by roughly 6 points.
+            {onTrack} of {goals.length} goals are on track or ahead. Projections assume your stated contributions and return, and are estimates rather than guarantees.
           </p>
         </Panel>
       </div>
@@ -229,7 +289,7 @@ export function GoalsBoard() {
         </button>
       </div>
 
-      <CreateGoalSheet open={open} onOpenChange={setOpen} onCreate={(g) => setGoals((gs) => [...gs, g])} />
+      <CreateGoalSheet open={open} onOpenChange={setOpen} onCreate={create} saving={pending} />
     </div>
   )
 }

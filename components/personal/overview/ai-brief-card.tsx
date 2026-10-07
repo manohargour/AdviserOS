@@ -1,9 +1,21 @@
 import Link from 'next/link'
 import { ArrowRight, Compass, ShieldAlert } from 'lucide-react'
+import type { AllocationSlice } from '@/lib/personal/data'
+import type { NetWorth } from '@/lib/personal/store'
+import { formatGBP, formatPct } from '@/lib/personal/format'
 import { AiMark, Panel } from '@/components/personal/wealth/primitives'
 import { AskAiButton } from '@/components/personal/shell/ask-ai-button'
 
-export function AiBriefCard() {
+export function AiBriefCard({
+  netWorth,
+  assetAllocation,
+  isEmpty,
+}: {
+  netWorth: NetWorth
+  assetAllocation: AllocationSlice[]
+  isEmpty: boolean
+}) {
+  const topAsset = assetAllocation[0]
   return (
     <Panel className="relative flex flex-col overflow-hidden border-ai/15 p-5">
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-ai-soft/80 to-transparent" />
@@ -11,23 +23,39 @@ export function AiBriefCard() {
         <AiMark />
         <div>
           <h2 className="text-sm font-semibold">Your AI Wealth Brief</h2>
-          <p className="text-[12px] text-muted-foreground">Updated 7:02am · Tuesday 29 September</p>
+          <p className="text-[12px] text-muted-foreground">Based on the accounts and holdings you have entered</p>
         </div>
       </div>
 
       <div className="relative mt-5 flex flex-1 flex-col gap-3 text-[14px] leading-relaxed text-foreground/90">
-        <p className="text-pretty">
-          Your portfolio gained <strong className="num font-semibold text-positive">2.8%</strong> this month, primarily driven by
-          AI infrastructure and semiconductor holdings.
-        </p>
-        <p className="text-pretty">
-          Your overall financial position remains healthy, but technology now represents{' '}
-          <strong className="num font-semibold text-warning">41%</strong> of your investable assets.
-        </p>
-        <p className="text-pretty">
-          Your largest hidden concentration is <strong className="font-semibold">Nvidia exposure</strong> across individual stocks,
-          ETFs and pension funds.
-        </p>
+        {isEmpty ? (
+          <p className="text-pretty">
+            Add your accounts, holdings and goals to get a personalised brief. Everything here is computed from your own data —
+            nothing is shared with anyone.
+          </p>
+        ) : (
+          <>
+            <p className="text-pretty">
+              Your net worth is <strong className="num font-semibold">{formatGBP(netWorth.total)}</strong>, a change of{' '}
+              <strong className={`num font-semibold ${netWorth.monthChange >= 0 ? 'text-positive' : 'text-negative'}`}>
+                {formatPct(netWorth.monthChangePct, { signed: true })}
+              </strong>{' '}
+              this month.
+            </p>
+            {topAsset ? (
+              <p className="text-pretty">
+                Your largest asset class is <strong className="font-semibold">{topAsset.name}</strong> at{' '}
+                <strong className={`num font-semibold ${topAsset.value >= 40 ? 'text-warning' : ''}`}>{topAsset.value}%</strong>{' '}
+                of your investments.
+              </p>
+            ) : (
+              <p className="text-pretty">Add holdings to see how your investments are allocated.</p>
+            )}
+            <p className="text-pretty">
+              Review your concentration and currency exposure to check they match your goals and future spending.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="relative mt-5 flex flex-wrap gap-2 border-t pt-4">

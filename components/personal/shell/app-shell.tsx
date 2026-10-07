@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Bell, Menu, Search, Sparkles, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle } from '@/components/personal/ui/sheet'
 import { AdvisorChat } from '@/components/personal/advisor/advisor-chat'
+import type { PersonalInput } from '@/lib/personal/insights'
 import { AiMark } from '@/components/personal/wealth/primitives'
 import { Logo, SidebarNav } from './sidebar-nav'
 import { cn } from '@/lib/utils'
@@ -20,7 +21,7 @@ export function useAiPanel() {
 
 export type ShellUser = { name: string; email: string; role: 'personal' | 'client' }
 
-export function AppShell({ children, user }: { children: React.ReactNode; user: ShellUser }) {
+export function AppShell({ children, user, advisorData }: { children: React.ReactNode; user: ShellUser; advisorData?: PersonalInput }) {
   const pathname = usePathname()
   const [mobileNav, setMobileNav] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
@@ -132,7 +133,7 @@ export function AppShell({ children, user }: { children: React.ReactNode; user: 
                   </button>
                 </div>
                 <div className="min-h-0 flex-1">
-                  <AdvisorChat key={askKey} compact initialQuestion={question} />
+                  <AdvisorChat key={askKey} compact initialQuestion={question} data={advisorData} />
                 </div>
               </aside>
             ) : null}
