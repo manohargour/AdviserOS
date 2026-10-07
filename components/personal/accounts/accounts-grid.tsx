@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import { addAccount, deleteAccount, loadSample, updateAccount } from '@/app/actions/personal-data'
 import type { AccountRow } from '@/lib/personal/store'
 import { formatGBP } from '@/lib/personal/format'
@@ -169,6 +170,9 @@ export function AccountsGrid({ accounts }: { accounts: AccountRow[] }) {
                 Load sample data
               </button>
             ) : null}
+            <Link href="/me/add" className="inline-flex h-9 items-center gap-1.5 rounded-lg border bg-card px-3 text-[13px] font-medium hover:bg-muted">
+              <Upload className="size-4" aria-hidden />Import
+            </Link>
             <button type="button" onClick={openAdd} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">
               <Plus className="size-4" aria-hidden />Add account
             </button>
@@ -189,10 +193,15 @@ export function AccountsGrid({ accounts }: { accounts: AccountRow[] }) {
       {accounts.length === 0 ? (
         <Panel className="flex flex-col items-center gap-3 p-12 text-center">
           <p className="text-sm font-medium">No accounts yet</p>
-          <p className="max-w-sm text-[13px] text-muted-foreground">Add your investment accounts, property, cash and liabilities to see your complete financial picture.</p>
-          <button type="button" onClick={openAdd} className="mt-2 inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">
-            <Plus className="size-4" aria-hidden />Add your first account
-          </button>
+          <p className="max-w-sm text-[13px] text-muted-foreground">Import a statement from your broker, or add your investment accounts, property, cash and liabilities by hand.</p>
+          <div className="mt-2 flex flex-wrap justify-center gap-2">
+            <Link href="/me/add" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">
+              <Upload className="size-4" aria-hidden />Import investments
+            </Link>
+            <button type="button" onClick={openAdd} className="inline-flex h-9 items-center gap-1.5 rounded-lg border bg-card px-3.5 text-[13px] font-medium hover:bg-muted">
+              <Plus className="size-4" aria-hidden />Add manually
+            </button>
+          </div>
         </Panel>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -194,6 +194,22 @@ export const personalAccounts = pgTable('personal_accounts', {
   value: integer('value').notNull().default(0),
   region: text('region').notNull().default('UK'),
   status: text('status').$type<'Connected' | 'Manual'>().notNull().default('Manual'),
+  connectionId: integer('connectionId'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+})
+
+export type PersonalConnectionType = 'manual' | 'document' | 'api_key' | 'oauth'
+export type PersonalConnectionStatus = 'connected' | 'pending' | 'error' | 'disconnected'
+
+export const personalConnections = pgTable('personal_connections', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  provider: text('provider').notNull(),
+  connectionType: text('connectionType').$type<PersonalConnectionType>().notNull().default('manual'),
+  status: text('status').$type<PersonalConnectionStatus>().notNull().default('connected'),
+  label: text('label').notNull().default(''),
+  lastSyncAt: timestamp('lastSyncAt'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
@@ -204,8 +220,12 @@ export const personalHoldings = pgTable('personal_holdings', {
   id: serial('id').primaryKey(),
   userId: text('userId').notNull(),
   accountId: integer('accountId'),
+  connectionId: integer('connectionId'),
   name: text('name').notNull(),
   ticker: text('ticker').notNull().default(''),
+  isin: text('isin').notNull().default(''),
+  quantity: doublePrecision('quantity').notNull().default(0),
+  unitPrice: doublePrecision('unitPrice').notNull().default(0),
   value: integer('value').notNull().default(0),
   returnPct: doublePrecision('returnPct').notNull().default(0),
   dayPct: doublePrecision('dayPct').notNull().default(0),
