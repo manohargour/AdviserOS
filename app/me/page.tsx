@@ -8,6 +8,8 @@ import { AllocationDonut } from '@/components/personal/wealth/allocation-donut'
 import { PageHeader } from '@/components/personal/wealth/primitives'
 import { requirePersonal } from '@/lib/roles'
 import { getPersonalSnapshot } from '@/lib/personal/store'
+import Link from 'next/link'
+import { ArrowRight, Sparkles } from 'lucide-react'
 
 export default async function OverviewPage() {
   const user = await requirePersonal()
@@ -21,6 +23,26 @@ export default async function OverviewPage() {
         title={`Hello, ${firstName}`}
         description="Here’s how your wealth is tracking."
       />
+      {snapshot.isEmpty ? (
+        <Link
+          href="/me/add"
+          className="group flex flex-col gap-3 rounded-2xl border border-ai/20 bg-ai-soft/40 p-5 transition-colors hover:bg-ai-soft/60 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-ai">
+              <Sparkles className="size-5" aria-hidden />
+            </span>
+            <span>
+              <span className="block text-[15px] font-semibold">See your entire financial life in one place</span>
+              <span className="block text-[13px] text-muted-foreground">Import a statement or add an account to build your wealth picture.</span>
+            </span>
+          </span>
+          <span className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-[13px] font-medium text-primary-foreground group-hover:bg-primary/90">
+            Build my wealth picture
+            <ArrowRight className="size-4" aria-hidden />
+          </span>
+        </Link>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-3">
         <NetWorthCard netWorth={snapshot.netWorth} series={snapshot.netWorthSeries} />
         <AiBriefCard netWorth={snapshot.netWorth} assetAllocation={snapshot.allocation.asset} isEmpty={snapshot.isEmpty} />

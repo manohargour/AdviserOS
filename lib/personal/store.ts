@@ -88,6 +88,23 @@ export function ensurePersonalTables() {
           "updatedAt" timestamp NOT NULL DEFAULT now()
         );
         CREATE UNIQUE INDEX IF NOT EXISTS personal_goals_userId_slug_key ON personal_goals ("userId", "slug");
+        CREATE TABLE IF NOT EXISTS personal_connections (
+          "id" serial PRIMARY KEY,
+          "userId" text NOT NULL,
+          "provider" text NOT NULL,
+          "connectionType" text NOT NULL DEFAULT 'manual',
+          "status" text NOT NULL DEFAULT 'connected',
+          "label" text NOT NULL DEFAULT '',
+          "lastSyncAt" timestamp,
+          "createdAt" timestamp NOT NULL DEFAULT now(),
+          "updatedAt" timestamp NOT NULL DEFAULT now()
+        );
+        CREATE INDEX IF NOT EXISTS personal_connections_userId_idx ON personal_connections ("userId");
+        ALTER TABLE personal_accounts ADD COLUMN IF NOT EXISTS "connectionId" integer;
+        ALTER TABLE personal_holdings ADD COLUMN IF NOT EXISTS "connectionId" integer;
+        ALTER TABLE personal_holdings ADD COLUMN IF NOT EXISTS "isin" text NOT NULL DEFAULT '';
+        ALTER TABLE personal_holdings ADD COLUMN IF NOT EXISTS "quantity" double precision NOT NULL DEFAULT 0;
+        ALTER TABLE personal_holdings ADD COLUMN IF NOT EXISTS "unitPrice" double precision NOT NULL DEFAULT 0;
       `)
     })().catch((error) => {
       ensured = null
