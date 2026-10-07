@@ -88,19 +88,33 @@ CRON_SECRET="another-random-secret"
 
 ### Database schema
 
-There is no migration tooling committed to the repo. The schema lives in [lib/db/schema.ts](lib/db/schema.ts).
+The schema lives in [lib/db/schema.ts](lib/db/schema.ts). Provision all tables in one step:
 
-- **Auth tables** are managed by better-auth.
-- **Personal (Meridian) tables** (`personal_profile`, `personal_accounts`, `personal_holdings`, `personal_goals`) are created on first use at runtime by `ensurePersonalTables()` in [lib/personal/store.ts](lib/personal/store.ts).
-- **Adviser workspace tables** (`clients`, `reviews`, `tasks`, `alerts`, `reports`, etc.) are expected to exist and are seeded with sample data on an adviser's first load. Provision them from the Drizzle schema before running in production (for example with `drizzle-kit push`).
+```bash
+pnpm db:setup
+```
+
+This runs an idempotent script ([db/setup.sql](db/setup.sql)) that creates every table with `CREATE TABLE IF NOT EXISTS`. It is safe to run against a brand-new database (creates everything, including the better-auth tables) or an existing one (nothing is altered or dropped and no data is touched). Run it once per environment before first use — and again after any schema change — including on the production database.
+
+It reads `DATABASE_URL` from the environment or from `.env.local`.
+
+For iterating on the schema during development you can also use Drizzle Kit:
+
+```bash
+pnpm db:push     # sync lib/db/schema.ts to the database (app tables only)
+pnpm db:studio   # browse the database
+```
+
+As a safety net, the personal (`personal_*`) tables are also created on first use at runtime by `ensurePersonalTables()` in [lib/personal/store.ts](lib/personal/store.ts), but `pnpm db:setup` is the canonical, complete step.
 
 ### Run
 
 ```bash
-pnpm dev     # start the dev server (http://localhost:3000)
-pnpm build   # production build (type-checked)
-pnpm start   # run the production build
-pnpm test    # run the Vitest unit tests
+pnpm dev       # start the dev server (http://localhost:3000)
+pnpm build     # production build (type-checked)
+pnpm start     # run the production build
+pnpm test      # run the Vitest unit tests
+pnpm db:setup  # create the database tables (idempotent)
 ```
 
 ## Testing
@@ -138,4 +152,8 @@ tests/          # Vitest unit tests
 
 ## Deployment
 
-The app is designed for Vercel. Configure the environment variables above, provision the database schema, and (optionally) set up the demo-reset cron in [vercel.json](vercel.json) with a `CRON_SECRET`.
+The app is designed for Vercel.
+
+1. Configure the environment variables above (database, auth, AI, and optionally email/cron).
+2. Provision the database once with `pnpm db:setup` (run against the production `DATABASE_URL`).
+3. Deploy. The demo-reset cron in [vercel.json](vercel.json) runs if a `CRON_SECRET` is set.
